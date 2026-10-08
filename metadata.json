@@ -1,0 +1,6 @@
+{
+  "name": "Dompet Pintar Cimahi - Manajemen Anggaran & Sinkronisasi Sheets",
+  "description": "Aplikasi pencatatan keuangan bulanan offline-first dengan sinkronisasi Google Sheets, Gemini AI advisor pangan Cimahi, kalender, notifikasi limit harian, dan ekspor laporan PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
