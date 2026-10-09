@@ -10,6 +10,7 @@ import {
   FileSpreadsheet,
   Calendar,
   Settings,
+  Award,
 } from 'lucide-react';
 import { SyncStatus } from '../types/finance.ts';
 import { User } from 'firebase/auth';
@@ -23,6 +24,8 @@ interface NavbarProps {
   onOpenSyncModal: () => void;
   onOpenCalendarModal: () => void;
   onOpenSettingsModal: () => void;
+  onOpenRecapModal?: () => void;
+  isEndOfMonth?: boolean;
   googleUser: User | null;
   onGoogleSignIn: () => void;
   onGoogleLogout: () => void;
@@ -38,6 +41,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSyncModal,
   onOpenCalendarModal,
   onOpenSettingsModal,
+  onOpenRecapModal,
+  isEndOfMonth,
   googleUser,
   onGoogleSignIn,
   onGoogleLogout,
@@ -61,21 +66,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
                   M-Ber
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
+                <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
                   Cimahi & KBB
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+              <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 Monthly Budget Report
               </p>
             </div>
           </div>
 
           {/* Right Action Icons & Controls */}
-          <div className="flex items-center space-x-2">
-            {/* Online / Offline status (Icon only on smaller screens) */}
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Online / Offline status */}
             <div
-              className={`flex items-center space-x-1 p-2 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium ${
+              className={`flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium ${
                 syncStatus.isOnline
                   ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
                   : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
@@ -107,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Google Sheets Modal trigger */}
             <button
               onClick={onOpenSyncModal}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
+              className="hidden sm:inline-flex p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
               title="Koneksi Google Sheets & Apps Script"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -116,7 +121,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Google Calendar modal trigger */}
             <button
               onClick={onOpenCalendarModal}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
+              className="hidden sm:inline-flex p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
               title="Pengingat Jadwal Google Calendar"
             >
               <Calendar className="w-4 h-4 text-blue-500" />
@@ -125,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Notification Bell */}
             <button
               onClick={onOpenNotifications}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative cursor-pointer"
               title="Notifikasi & Peringatan Limit"
             >
               <Bell className="w-4 h-4" />
@@ -133,6 +138,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900" />
               )}
             </button>
+
+            {/* End of Month Recap Modal Trigger */}
+            {onOpenRecapModal && (
+              <button
+                onClick={onOpenRecapModal}
+                className="p-2 rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition relative cursor-pointer"
+                title="Rekapitulasi Bulanan & Unduh Laporan (PNG/PDF)"
+              >
+                <Award className="w-4 h-4 text-amber-500" />
+                {isEndOfMonth && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                )}
+              </button>
+            )}
 
             {/* Settings Modal Trigger */}
             <button
@@ -143,13 +162,28 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Settings className="w-4 h-4" />
             </button>
 
-            {/* Dark Mode Toggle */}
+            {/* Dark / Light Mode Toggle */}
             <button
               onClick={onToggleDark}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              title={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
+                isDark
+                  ? 'border-slate-700 bg-slate-800 text-amber-300 hover:bg-slate-700'
+                  : 'border-slate-200 bg-amber-50/80 text-amber-800 hover:bg-amber-100 shadow-2xs'
+              }`}
+              title={isDark ? 'Ganti ke Mode Terang (Light Mode)' : 'Ganti ke Mode Gelap (Dark Mode)'}
+              aria-label={isDark ? 'Aktifkan Mode Terang' : 'Aktifkan Mode Gelap'}
             >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+              {isDark ? (
+                <>
+                  <Sun className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="hidden sm:inline">Terang</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-4 h-4 text-slate-700 shrink-0" />
+                  <span className="hidden sm:inline">Gelap</span>
+                </>
+              )}
             </button>
 
             {/* Google User Profile or Login */}

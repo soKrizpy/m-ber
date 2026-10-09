@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Sparkles,
   Info,
+  Award,
 } from 'lucide-react';
 import {
   Transaction,
@@ -28,6 +29,7 @@ interface AnalyticsDashboardProps {
   totalExpense: number;
   remainingBudget: number;
   categories: CategorySummary[];
+  onOpenRecapModal?: () => void;
 }
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
@@ -38,6 +40,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   totalExpense,
   remainingBudget,
   categories,
+  onOpenRecapModal,
 }) => {
   const [hoveredPoint, setHoveredPoint] = useState<{
     day: number;
@@ -287,6 +290,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
 
           <div className="flex items-center space-x-2">
+            {onOpenRecapModal && (
+              <button
+                onClick={onOpenRecapModal}
+                className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 transition shadow-xs cursor-pointer"
+                title="Buka Kartu Rekap Akhir Bulan, Prestasi & Saran Efisiensi"
+              >
+                <Award className="w-4 h-4 text-slate-950" />
+                <span className="hidden sm:inline">Rekap Akhir Bulan</span>
+              </button>
+            )}
             <button
               onClick={handleExportPNG}
               className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition"

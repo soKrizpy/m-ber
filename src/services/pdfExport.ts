@@ -33,7 +33,7 @@ export class ExportService {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('DOMPET PINTAR CIMAHI - LAPORAN KEUANGAN', 14, 12);
+    doc.text('M-BER: MONTHLY BUDGET REPORT', 14, 12);
 
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
@@ -206,9 +206,9 @@ export class ExportService {
     doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
     doc.setFont('helvetica', 'italic');
-    doc.text('Dicetak otomatis oleh Dompet Pintar Cimahi | Terintegrasi dengan Google Sheets & Gemini AI', 14, 288);
+    doc.text('Dicetak otomatis oleh M-Ber (Monthly Budget Report) | Terintegrasi dengan Google Sheets & Kang Tambal AI', 14, 288);
 
-    doc.save(`Laporan_Keuangan_Cimahi_${data.config.month}.pdf`);
+    doc.save(`Laporan_Keuangan_MBer_${data.config.month}.pdf`);
   }
 
   /**

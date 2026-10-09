@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Wallet,
-  Plus,
   BarChart3,
   Sparkles,
   CloudUpload,
@@ -10,6 +9,7 @@ import {
   FileSpreadsheet,
   Calendar,
   X,
+  Award,
 } from 'lucide-react';
 import {
   Transaction,
@@ -38,29 +38,71 @@ import { GoogleSyncModal } from './components/GoogleSyncModal.tsx';
 import { CalendarReminderModal } from './components/CalendarReminderModal.tsx';
 import { NotificationDrawer } from './components/NotificationDrawer.tsx';
 import { SettingsModal } from './components/SettingsModal.tsx';
+import { EndOfMonthRecapModal } from './components/EndOfMonthRecapModal.tsx';
+import { AchievementsView } from './components/AchievementsView.tsx';
 import { User } from 'firebase/auth';
 
 export default function App() {
-  // Theme state
-  const [isDark, setIsDark] = useState<boolean>(() => {
+  // Theme state: 'light' | 'dark' | 'system'
+  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(() => {
     try {
-      const stored = localStorage.getItem('catatcuan_dark_theme');
-      if (stored !== null) return stored === 'true';
+      const stored = localStorage.getItem('catatcuan_theme_mode');
+      if (stored === 'light' || stored === 'dark' || stored === 'system') {
+        return stored;
+      }
+      // If user previously had stored dark theme preference
+      const storedLegacy = localStorage.getItem('catatcuan_dark_theme');
+      if (storedLegacy === 'false') return 'light';
+      if (storedLegacy === 'true') return 'dark';
+      // Default to light mode as requested
+      return 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => {
+    try {
       return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     } catch {
       return false;
     }
   });
 
+  // Listen to OS theme changes if user selects 'system'
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  const isDark = themeMode === 'system' ? systemPrefersDark : themeMode === 'dark';
+
   // Apply dark mode class to document
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
-    localStorage.setItem('catatcuan_dark_theme', isDark ? 'true' : 'false');
-  }, [isDark]);
+    try {
+      localStorage.setItem('catatcuan_theme_mode', themeMode);
+      localStorage.setItem('catatcuan_dark_theme', isDark ? 'true' : 'false');
+    } catch {
+      // ignore
+    }
+  }, [isDark, themeMode]);
+
+  const toggleTheme = useCallback(() => {
+    setThemeMode((prev) => {
+      const currentlyDark = prev === 'system' ? systemPrefersDark : prev === 'dark';
+      return currentlyDark ? 'light' : 'dark';
+    });
+  }, [systemPrefersDark]);
 
   // Data states
   const [transactions, setTransactions] = useState<Transaction[]>(() => FinanceDB.getTransactions());
@@ -75,7 +117,7 @@ export default function App() {
   const [googleUser, setGoogleUser] = useState<User | null>(null);
 
   // Active view tab & modals
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'analytics' | 'gemini'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'analytics' | 'achievements' | 'gemini'>('overview');
   const [geminiMode, setGeminiMode] = useState<'chatbot' | 'audit'>('chatbot');
   const [chatbotPrefillPrompt, setChatbotPrefillPrompt] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -83,6 +125,7 @@ export default function App() {
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isRecapModalOpen, setIsRecapModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ title: string; type: 'success' | 'warning' | 'info' } | null>(null);
 
   const showToast = useCallback((title: string, type: 'success' | 'warning' | 'info' = 'success') => {
@@ -236,6 +279,26 @@ export default function App() {
     };
   }, [budgetConfig, remainingBudget, todayExpense]);
 
+  // End of Month Check: last 5 days of the month (remainingDays <= 5)
+  const isEndOfMonth = dailyStatus.remainingDays <= 5;
+
+  // Auto trigger End-of-Month recap pop-up once per day when near the end of month
+  useEffect(() => {
+    if (isEndOfMonth) {
+      const todayDateStr = new Date().toISOString().split('T')[0];
+      const promptKey = `mber_recap_popup_shown_${budgetConfig.month}_${todayDateStr}`;
+      const alreadyPrompted = localStorage.getItem(promptKey);
+
+      if (!alreadyPrompted) {
+        const timer = setTimeout(() => {
+          setIsRecapModalOpen(true);
+          localStorage.setItem(promptKey, 'true');
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isEndOfMonth, budgetConfig.month]);
+
   // Category Breakdown
   const categoriesSummary: CategorySummary[] = useMemo(() => {
     const expenseList = currentMonthTransactions.filter((t) => t.type === 'expense');
@@ -382,13 +445,15 @@ export default function App() {
       {/* Top Navbar */}
       <Navbar
         isDark={isDark}
-        onToggleDark={() => setIsDark((prev) => !prev)}
+        onToggleDark={toggleTheme}
         syncStatus={syncStatus}
         unreadNotifsCount={unreadNotifsCount}
         onOpenNotifications={() => setIsNotifDrawerOpen(true)}
         onOpenSyncModal={() => setIsSyncModalOpen(true)}
         onOpenCalendarModal={() => setIsCalendarModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+        onOpenRecapModal={() => setIsRecapModalOpen(true)}
+        isEndOfMonth={isEndOfMonth}
         googleUser={googleUser}
         onGoogleSignIn={handleGoogleSignIn}
         onGoogleLogout={handleGoogleLogout}
@@ -443,6 +508,32 @@ export default function App() {
         {/* VIEW 1: Overview (Default) */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
+            {/* End of Month Prompt Callout Banner */}
+            {isEndOfMonth && (
+              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg animate-in fade-in">
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-white/25 flex items-center justify-center font-black text-slate-950 shrink-0 shadow-xs">
+                    <Award className="w-6 h-6 text-slate-950" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm sm:text-base tracking-tight">
+                      🗓️ Penghujung Bulan Tiba! Waktunya Rekap Evaluasi Keuangan
+                    </h3>
+                    <p className="text-xs text-slate-950/90 font-medium">
+                      Sisa {dailyStatus.remainingDays} hari. Rekap pengeluaran, klaim medali prestasimu, dan unduh infografis metrik (PNG/PDF).
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsRecapModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-black bg-slate-950 text-white hover:bg-slate-900 transition flex items-center justify-center space-x-2 shrink-0 shadow-md cursor-pointer active:scale-95"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Buka Rekap Bulanan Sekarang</span>
+                </button>
+              </div>
+            )}
+
             <BudgetOverviewCard
               config={budgetConfig}
               onUpdateConfig={(newCfg) => {
@@ -456,6 +547,7 @@ export default function App() {
               onOpenAddModal={() => setIsAddModalOpen(true)}
               onOpenAdvisor={() => setActiveTab('gemini')}
               onOpenExportModal={() => setActiveTab('analytics')}
+              onOpenRecapModal={() => setIsRecapModalOpen(true)}
             />
 
             {/* Daily AI-Generated Smart Spending Tips for Cimahi */}
@@ -575,10 +667,26 @@ export default function App() {
             totalExpense={totalExpense}
             remainingBudget={remainingBudget}
             categories={categoriesSummary}
+            onOpenRecapModal={() => setIsRecapModalOpen(true)}
           />
         )}
 
-        {/* VIEW 4: Gemini Advisor (Kang Cuan AI - Chatbot & Audit) */}
+        {/* VIEW 4: Prestasi & Pencapaian Finansial (Achievements Page) */}
+        {activeTab === 'achievements' && (
+          <AchievementsView
+            config={budgetConfig}
+            transactions={currentMonthTransactions}
+            dailyStatus={dailyStatus}
+            totalIncome={totalIncome}
+            totalExpense={totalExpense}
+            remainingBudget={remainingBudget}
+            categories={categoriesSummary}
+            onOpenRecapModal={() => setIsRecapModalOpen(true)}
+            onNavigateTab={setActiveTab}
+          />
+        )}
+
+        {/* VIEW 5: Gemini Advisor (Kang Tambal - Chatbot & Audit) */}
         {activeTab === 'gemini' && (
           <div className="space-y-4">
             {/* Mode Switcher Pills */}
@@ -635,33 +743,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Floating Action Button - Kang Tambal (Bottom Left Side) */}
-      {activeTab !== 'gemini' && (
-        <div className="fixed bottom-20 left-4 md:bottom-6 md:left-6 z-30">
-          <button
-            onClick={() => {
-              setActiveTab('gemini');
-              setGeminiMode('chatbot');
-            }}
-            className="w-11 h-11 rounded-full bg-gradient-to-tr from-teal-600 to-emerald-500 hover:from-teal-500 hover:to-emerald-400 text-white shadow-lg shadow-teal-600/30 flex items-center justify-center transition active:scale-90 group"
-            title="Buka Chatbot Kang Tambal"
-          >
-            <Sparkles className="w-5 h-5 text-amber-300 group-hover:rotate-12 transition duration-200" />
-          </button>
-        </div>
-      )}
-
-      {/* Floating Action Button - Add Transaction '+' (Bottom Right Side) */}
-      <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-30">
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="w-11 h-11 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 flex items-center justify-center transition active:scale-90 hover:rotate-90 duration-200"
-          title="Catat Transaksi Baru"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
-      </div>
-
       {/* Modals and Drawers */}
       <TransactionFormModal
         isOpen={isAddModalOpen}
@@ -717,6 +798,42 @@ export default function App() {
           NotificationService.checkCategoryRules(transactions, budgetConfig.month);
           showToast('Aturan notifikasi kategori diperbarui.', 'info');
         }}
+        themeMode={themeMode}
+        onThemeModeChange={(mode) => {
+          setThemeMode(mode);
+          showToast(
+            mode === 'light'
+              ? 'Mode Terang (Light Mode) diaktifkan.'
+              : mode === 'dark'
+              ? 'Mode Gelap (Dark Mode) diaktifkan.'
+              : 'Tema Otomatis (Mengikuti Sistem) diaktifkan.',
+            'info'
+          );
+        }}
+      />
+
+      {/* End of Month Recap & Reminder Modal */}
+      <EndOfMonthRecapModal
+        isOpen={isRecapModalOpen}
+        onClose={() => setIsRecapModalOpen(false)}
+        config={budgetConfig}
+        transactions={currentMonthTransactions}
+        dailyStatus={dailyStatus}
+        totalIncome={totalIncome}
+        totalExpense={totalExpense}
+        remainingBudget={remainingBudget}
+        categories={categoriesSummary}
+        onOpenAdvisor={() => {
+          setActiveTab('gemini');
+        }}
+        onOpenAchievements={() => {
+          setActiveTab('achievements');
+        }}
+        onUpdateConfig={(newCfg) => {
+          FinanceDB.saveBudgetConfig(newCfg);
+          showToast('Target anggaran bulan baru berhasil disimpan!', 'success');
+        }}
+        onToast={showToast}
       />
     </div>
   );

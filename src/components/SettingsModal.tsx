@@ -14,6 +14,9 @@ import {
   ToggleRight,
   ShoppingBag,
   MapPin,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import {
   BudgetConfig,
@@ -29,6 +32,8 @@ interface SettingsModalProps {
   onUpdateConfig: (newConfig: BudgetConfig) => void;
   categoryExpenses: Record<string, number>;
   onRulesChanged: () => void;
+  themeMode?: 'light' | 'dark' | 'system';
+  onThemeModeChange?: (mode: 'light' | 'dark' | 'system') => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -38,6 +43,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onUpdateConfig,
   categoryExpenses,
   onRulesChanged,
+  themeMode = 'light',
+  onThemeModeChange,
 }) => {
   const [rules, setRules] = useState<CategoryNotificationRule[]>(() =>
     NotificationService.getCategoryRules()
@@ -442,6 +449,84 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </p>
               </label>
             ))}
+          </div>
+        </div>
+
+        {/* SECTION 4: Theme Mode (Mode Tampilan: Terang / Gelap / Sistem) */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3 text-xs">
+          <div className="flex items-center space-x-2">
+            <Sun className="w-4 h-4 text-amber-500" />
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+              Tema Tampilan Aplikasi (Theme Mode)
+            </h3>
+          </div>
+
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            Pilih mode terang untuk tampilan bersih dan cerah di siang hari, atau mode gelap untuk kenyamanan mata di malam hari:
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {[
+              {
+                id: 'light' as const,
+                title: 'Mode Terang (Light)',
+                desc: 'Tampilan cerah, bersih & nyaman dibaca',
+                icon: Sun,
+                color: 'text-amber-500',
+              },
+              {
+                id: 'dark' as const,
+                title: 'Mode Gelap (Dark)',
+                desc: 'Kontras gelap, hemat baterai OLED',
+                icon: Moon,
+                color: 'text-indigo-400',
+              },
+              {
+                id: 'system' as const,
+                title: 'Otomatis Sistem',
+                desc: 'Mengikuti pengaturan browser/HP',
+                icon: Monitor,
+                color: 'text-emerald-500',
+              },
+            ].map((item) => {
+              const isSelected = themeMode === item.id;
+              const IconComp = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onThemeModeChange && onThemeModeChange(item.id)}
+                  className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between space-y-2 cursor-pointer ${
+                    isSelected
+                      ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 ring-1 ring-emerald-500/50 shadow-xs'
+                      : 'border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center space-x-2">
+                      <div className={`p-1.5 rounded-lg bg-white dark:bg-slate-800 shadow-2xs ${item.color}`}>
+                        <IconComp className="w-4 h-4" />
+                      </div>
+                      <span className="font-bold text-slate-900 dark:text-white text-xs">
+                        {item.title}
+                      </span>
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                        isSelected
+                          ? 'border-emerald-600 bg-emerald-600 text-white'
+                          : 'border-slate-300 dark:border-slate-600'
+                      }`}
+                    >
+                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white block" />}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug">
+                    {item.desc}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
 

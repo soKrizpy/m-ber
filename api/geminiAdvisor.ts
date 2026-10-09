@@ -195,10 +195,11 @@ ${context.recentTransactions
   .map((t) => `  • [${t.date}] ${t.category}: Rp ${t.amount.toLocaleString('id-ID')} (${t.description})`)
   .join('\n') || '  (Belum ada data)'}
 
-Gaya Komunikasi:
+Gaya Komunikasi & Format:
 - Ramah, hangat, praktis, to the point.
 - Gunakan Bahasa Indonesia yang natural (bisa sesekali menyapa Kang/Teh dengan sopan).
-- Berikan angka estimasi harga riil di Cimahi dalam Rupiah (Rp).`;
+- Berikan angka estimasi harga riil di Cimahi dalam Rupiah (Rp).
+- Gunakan format Markdown yang rapi dan terstruktur: gunakan heading level 3 (###) untuk bagian utama, heading level 4 (####) untuk nama tempat/toko, bullet points (-) untuk rincian, dan tebalkan kata kunci atau angka harga penting dengan jelas. Hindari tag berantakan.`;
 
   // Format messages into contents array
   const contents = messages.map((m) => ({
@@ -216,13 +217,13 @@ Gaya Komunikasi:
     },
   });
 
-  return response.text || 'Maaf, Kang Cuan AI sedang menyiapkan data. Coba tanyakan kembali ya!';
+  return response.text || 'Maaf, Kang Tambal sedang menyiapkan data. Coba tanyakan kembali ya!';
 }
 
 export async function generateBudgetAdvice(context: FinancialContext) {
   const model = 'gemini-3.8-flash';
 
-  const systemInstruction = `Anda adalah "Kang Cuan AI", penasihat keuangan pribadi cerdas dan ramah yang sangat memahami kondisi ekonomi Indonesia terkini, khususnya wilayah Kota Cimahi dan Kabupaten Bandung Barat (KBB):
+  const systemInstruction = `Anda adalah "Kang Tambal", penasihat keuangan pribadi cerdas dan ramah yang sangat memahami kondisi ekonomi Indonesia terkini, khususnya wilayah Kota Cimahi dan Kabupaten Bandung Barat (KBB):
 - KBB: Area Jl. Haji Ghofur, Wisata & Kawasan PakuHaji, Desa Cilame, Kecamatan Ngamprah (Kompleks Pemkab KBB, Gadobangkong), Tanimulya, hingga Padalarang.
 - Kota Cimahi: Kelurahan Cipageran (Cimahi Utara), Cimahi Tengah (Gandawijaya, Sangkuriang, Pasar Atas Baru, Pasar Antri Baru), Cimahi Selatan (Kerkof, Leuwigajah, Baros), dan Cimindi.
 

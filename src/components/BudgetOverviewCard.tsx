@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   PlusCircle,
   FileDown,
+  Award,
 } from 'lucide-react';
 import { BudgetConfig, DailyLimitStatus } from '../types/finance.ts';
 
@@ -23,6 +24,7 @@ interface BudgetOverviewCardProps {
   onOpenAddModal: () => void;
   onOpenAdvisor: () => void;
   onOpenExportModal: () => void;
+  onOpenRecapModal?: () => void;
 }
 
 export const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({
@@ -35,6 +37,7 @@ export const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({
   onOpenAddModal,
   onOpenAdvisor,
   onOpenExportModal,
+  onOpenRecapModal,
 }) => {
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [tempBudget, setTempBudget] = useState(config.monthlyBudget.toString());
@@ -167,10 +170,10 @@ export const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({
           </div>
 
           {/* Quick Action Buttons Row */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 pt-2 border-t border-white/10">
             <button
               onClick={onOpenAddModal}
-              className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition active:scale-95 shadow-md shadow-emerald-500/20"
+              className="col-span-2 sm:col-span-1 inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition active:scale-95 shadow-md shadow-emerald-500/20"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Catat Transaksi Baru</span>
@@ -178,19 +181,33 @@ export const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({
 
             <button
               onClick={onOpenAdvisor}
-              className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-teal-500 to-emerald-600 hover:opacity-90 text-white transition active:scale-95 shadow-md shadow-teal-500/20"
+              className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-teal-500 to-emerald-600 hover:opacity-90 text-white transition active:scale-95 shadow-md shadow-teal-500/20"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Konsultasi AI Kang Tambal</span>
+              <span>Tanya Kang Tambal</span>
             </button>
 
             <button
               onClick={onOpenExportModal}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium bg-white/10 hover:bg-white/20 text-white transition active:scale-95"
+              className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium bg-white/10 hover:bg-white/20 text-white transition active:scale-95"
             >
               <FileDown className="w-4 h-4" />
-              <span>Laporan PDF & PNG</span>
+              <span>Laporan PDF</span>
             </button>
+
+            {onOpenRecapModal && (
+              <button
+                onClick={onOpenRecapModal}
+                className="col-span-2 sm:col-span-1 inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 transition active:scale-95 shadow-md shadow-amber-400/20 cursor-pointer"
+                title="Buka Rekapitulasi, Prestasi & Evaluasi Akhir Bulan"
+              >
+                <Award className="w-4 h-4 text-slate-950" />
+                <span>Rekap Akhir Bulan</span>
+                {dailyStatus.remainingDays <= 5 && (
+                  <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

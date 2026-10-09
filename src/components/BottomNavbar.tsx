@@ -3,12 +3,13 @@ import {
   Wallet,
   Receipt,
   BarChart3,
+  Award,
   Sparkles,
 } from 'lucide-react';
 
 interface BottomNavbarProps {
-  activeTab: 'overview' | 'transactions' | 'analytics' | 'gemini';
-  onChangeTab: (tab: 'overview' | 'transactions' | 'analytics' | 'gemini') => void;
+  activeTab: 'overview' | 'transactions' | 'analytics' | 'achievements' | 'gemini';
+  onChangeTab: (tab: 'overview' | 'transactions' | 'analytics' | 'achievements' | 'gemini') => void;
   transactionCount?: number;
 }
 
@@ -40,6 +41,13 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       badge: null,
     },
     {
+      id: 'achievements' as const,
+      label: 'Prestasi',
+      shortLabel: 'Prestasi',
+      icon: Award,
+      badge: null,
+    },
+    {
       id: 'gemini' as const,
       label: 'Kang Tambal',
       shortLabel: 'Kang Tambal',
@@ -68,7 +76,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
                 aria-selected={isActive}
                 className={`relative group flex flex-col md:flex-row items-center justify-center transition-all duration-200 rounded-2xl md:rounded-xl focus:outline-hidden ${
                   // Responsive sizing and padding
-                  'px-3 py-1.5 min-w-[70px] md:min-w-0 md:px-4 md:py-2 md:gap-2'
+                  'px-1.5 sm:px-3 py-1.5 min-w-[56px] sm:min-w-[68px] md:min-w-0 md:px-4 md:py-2 md:gap-2'
                 } ${
                   isActive
                     ? item.isAi

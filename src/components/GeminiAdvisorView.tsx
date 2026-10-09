@@ -20,6 +20,7 @@ import {
   DailyLimitStatus,
   CategorySummary,
 } from '../types/finance.ts';
+import { MarkdownView } from './MarkdownView.tsx';
 
 interface GeminiAdvisorViewProps {
   config: BudgetConfig;
@@ -301,10 +302,8 @@ export const GeminiAdvisorView: React.FC<GeminiAdvisorViewProps> = ({
             </div>
           </div>
 
-          {/* Formatted Text Box */}
-          <div className="prose dark:prose-invert max-w-none text-xs sm:text-sm text-slate-700 dark:text-slate-200 space-y-2 whitespace-pre-line leading-relaxed">
-            {adviceResult}
-          </div>
+          {/* Formatted Markdown Box */}
+          <MarkdownView content={adviceResult} />
         </div>
       ) : (
         /* Empty State */

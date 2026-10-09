@@ -22,6 +22,7 @@ import {
   DailyLimitStatus,
   CategorySummary,
 } from '../types/finance.ts';
+import { MarkdownView } from './MarkdownView.tsx';
 
 interface ChatMessage {
   id: string;
@@ -313,9 +314,11 @@ Ada yang ingin didiskusikan? Saya bisa bantu analisis belanja harian, carikan su
                 }`}
               >
                 {/* Content */}
-                <div className="whitespace-pre-line leading-relaxed">
-                  {m.text}
-                </div>
+                <MarkdownView
+                  content={m.text}
+                  isUser={!isModel}
+                  className={isModel ? '' : 'text-white'}
+                />
 
                 {/* Footer timestamp & copy */}
                 <div
