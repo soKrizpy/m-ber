@@ -37,7 +37,13 @@ export interface DailySmartTip {
   estimatedSavings: string; // e.g. "Rp 25.000 - Rp 50.000"
 }
 
-export async function generateDailySmartTips(context: FinancialContext): Promise<DailySmartTip[]> {
+export async function generateDailySmartTips(context: FinancialContext = {} as any): Promise<DailySmartTip[]> {
+  const remainingBudget = context.remainingBudget ?? 0;
+  const remainingDays = context.remainingDays ?? 30;
+  const dailyLimit = context.dailyLimit ?? 0;
+  const todayExpense = context.todayExpense ?? 0;
+  const categoriesBreakdown = context.categoriesBreakdown ?? {};
+
   const systemInstruction = `Anda adalah "Kang Tambal", kurator tips belanja hemat dan pengelolaan anggaran harian untuk warga Kota Cimahi dan Kabupaten Bandung Barat (KBB), mencakup:
 - Kabupaten Bandung Barat: Area Jl. H. Gofur / Haji Ghofur, PakuHaji / Wisata Kuda Pakuhaji, Desa Cilame, Kecamatan Ngamprah (Kompleks Pemkab KBB / Stasiun KCIC Padalarang / Jl. Raya Cilame - Gadobangkong), serta Padalarang.
 - Kota Cimahi: Cipageran (Cimahi Utara), Cimahi Tengah (Gandawijaya, Sangkuriang, Pasar Atas Baru, Pasar Antri Baru), Cimahi Selatan (Kerkof, Leuwigajah, Baros), dan Cimindi.
@@ -50,21 +56,21 @@ Tugas Anda adalah menghasilkan 3 sampai 4 tips cerdas praktis untuk HARI INI yan
    - Transmart Cimahi / Lotte Grosir Padalarang
    - Yomart & Alfamart/Indomaret promo JSM di sepanjang Jl. Haji Ghofur, Cilame Ngamprah, dan Cipageran
    - Toko Grosir Sembako & Pasar Kaget PakuHaji / Cilame Permai / Permata Cimahi
-3. Batas Harian: Pacing anggaran agar sisa uang (Rp ${context.remainingBudget.toLocaleString('id-ID')}) cukup untuk ${context.remainingDays} hari ke depan (limit hari ini: Rp ${Math.round(context.dailyLimit).toLocaleString('id-ID')}).
+3. Batas Harian: Pacing anggaran agar sisa uang (Rp ${remainingBudget.toLocaleString('id-ID')}) cukup untuk ${remainingDays} hari ke depan (limit hari ini: Rp ${Math.round(dailyLimit).toLocaleString('id-ID')}).
 4. Trik Cuan: Opsi tambahan uang atau efisiensi pengeluaran jika pengeluaran hari ini sudah mepet.`;
 
   const promptText = `Hasilkan 3-4 tips belanja cerdas untuk hari ini berdasarkan data keuangan:
-- Sisa Anggaran 30 Hari: Rp ${context.remainingBudget.toLocaleString('id-ID')}
-- Sisa Hari: ${context.remainingDays} hari lagi
-- Limit Belanja Hari Ini: Rp ${Math.round(context.dailyLimit).toLocaleString('id-ID')}
-- Pengeluaran Hari Ini: Rp ${context.todayExpense.toLocaleString('id-ID')} (${
-    context.todayExpense > context.dailyLimit
+- Sisa Anggaran 30 Hari: Rp ${remainingBudget.toLocaleString('id-ID')}
+- Sisa Hari: ${remainingDays} hari lagi
+- Limit Belanja Hari Ini: Rp ${Math.round(dailyLimit).toLocaleString('id-ID')}
+- Pengeluaran Hari Ini: Rp ${todayExpense.toLocaleString('id-ID')} (${
+    todayExpense > dailyLimit
       ? 'Melebihi limit'
-      : context.todayExpense >= context.dailyLimit * 0.8
+      : todayExpense >= dailyLimit * 0.8
       ? 'Mendekati limit'
       : 'Aman'
   })
-- Kategori Belanja Terbesar: ${Object.keys(context.categoriesBreakdown).slice(0, 3).join(', ') || 'Belanja umum'}`;
+- Kategori Belanja Terbesar: ${Object.keys(categoriesBreakdown).slice(0, 3).join(', ') || 'Belanja umum'}`;
 
   try {
     const response = await callGemini(promptText, {
@@ -164,9 +170,17 @@ export interface FinancialContext {
 
 export async function chatBudgetAdvisor(
   messages: Array<{ role: 'user' | 'model'; text: string }>,
-  context: FinancialContext
+  context: FinancialContext = {} as any
 ) {
-  const model = 'gemini-3.8-flash';
+  const monthlyBudget = context.monthlyBudget ?? 0;
+  const remainingBudget = context.remainingBudget ?? 0;
+  const daysInMonth = context.daysInMonth ?? 30;
+  const currentDay = context.currentDay ?? 1;
+  const remainingDays = context.remainingDays ?? 30;
+  const dailyLimit = context.dailyLimit ?? 0;
+  const todayExpense = context.todayExpense ?? 0;
+  const categoriesBreakdown = context.categoriesBreakdown ?? {};
+  const recentTransactions = context.recentTransactions ?? [];
 
   const systemInstruction = `Anda adalah "Kang Tambal", chatbot asisten keuangan interaktif pribadi khusus wilayah Kota Cimahi dan Kabupaten Bandung Barat (KBB), mencakup:
 - Kabupaten Bandung Barat: Area Jl. Haji Ghofur (H. Gofur), PakuHaji, Desa Cilame, Kecamatan Ngamprah (Kompleks Pemkab KBB / Stasiun Padalarang KCIC / Gadobangkong), Tani Mulya, dan Padalarang.
@@ -182,29 +196,29 @@ Peran Utama Anda:
    - Promo JSM Borma Toserba (Borma Gandawijaya, Kerkof, Dakota).
    - Super Indo Cimahi (Sangkuriang / Gatot Subroto) untuk diskon buah & protein hewani.
    - Promo mingguan supermarket/minimarket sepanjang Jl. Raya Cilame Ngamprah, Haji Ghofur, Cipageran, dan Lotte Mart / Transmart Padalarang.
-4. Menilai apakah pengeluaran hari ini (Rp ${context.todayExpense.toLocaleString('id-ID')}) aman atau melebihi limit harian (Rp ${context.dailyLimit.toLocaleString('id-ID')}).
+4. Menilai apakah pengeluaran hari ini (Rp ${todayExpense.toLocaleString('id-ID')}) aman atau melebihi limit harian (Rp ${dailyLimit.toLocaleString('id-ID')}).
 5. Jika sisa anggaran sudah kritis dan tidak bisa dipangkas lagi, sarankan opsi penghasilan tambahan yang realistis di area Cimahi - KBB (kuliner UMKM, gig economy jalur Gadobangkong-Cimahi-Bandung, jastip belanja, dsb).
 
 DATA KEUANGAN PENGGUNA TERKINI:
-- Target Anggaran Bulanan: Rp ${context.monthlyBudget.toLocaleString('id-ID')}
-- Sisa Anggaran: Rp ${context.remainingBudget.toLocaleString('id-ID')}
-- Hari ke-${context.currentDay} dari ${context.daysInMonth} hari (Sisa ${context.remainingDays} hari)
-- Batas Limit Harian yang dialokasikan: Rp ${Math.round(context.dailyLimit).toLocaleString('id-ID')} / hari
-- Pengeluaran Hari Ini: Rp ${context.todayExpense.toLocaleString('id-ID')} (${
-    context.todayExpense > context.dailyLimit
+- Target Anggaran Bulanan: Rp ${monthlyBudget.toLocaleString('id-ID')}
+- Sisa Anggaran: Rp ${remainingBudget.toLocaleString('id-ID')}
+- Hari ke-${currentDay} dari ${daysInMonth} hari (Sisa ${remainingDays} hari)
+- Batas Limit Harian yang dialokasikan: Rp ${Math.round(dailyLimit).toLocaleString('id-ID')} / hari
+- Pengeluaran Hari Ini: Rp ${todayExpense.toLocaleString('id-ID')} (${
+    todayExpense > dailyLimit
       ? 'MELEBIHI LIMIT HARIAN!'
-      : context.todayExpense >= context.dailyLimit * 0.8
+      : todayExpense >= dailyLimit * 0.8
       ? 'MENDEKATI LIMIT HARIAN'
       : 'Aman di bawah limit'
   })
 - Kategori Pengeluaran Terbesar:
-${Object.entries(context.categoriesBreakdown)
-  .map(([cat, amt]) => `  • ${cat}: Rp ${amt.toLocaleString('id-ID')}`)
+${Object.entries(categoriesBreakdown)
+  .map(([cat, amt]) => `  • ${cat}: Rp ${(amt || 0).toLocaleString('id-ID')}`)
   .join('\n') || '  (Belum ada data)'}
 - Riwayat Belanja Terakhir:
-${context.recentTransactions
+${recentTransactions
   .slice(0, 4)
-  .map((t) => `  • [${t.date}] ${t.category}: Rp ${t.amount.toLocaleString('id-ID')} (${t.description})`)
+  .map((t) => `  • [${t.date}] ${t.category}: Rp ${(t.amount || 0).toLocaleString('id-ID')} (${t.description})`)
   .join('\n') || '  (Belum ada data)'}
 
 Gaya Komunikasi & Format:
@@ -232,7 +246,19 @@ Gaya Komunikasi & Format:
   }
 }
 
-export async function generateBudgetAdvice(context: FinancialContext) {
+export async function generateBudgetAdvice(context: FinancialContext = {} as any) {
+  const monthlyBudget = context.monthlyBudget ?? 0;
+  const totalIncome = context.totalIncome ?? 0;
+  const totalExpense = context.totalExpense ?? 0;
+  const remainingBudget = context.remainingBudget ?? 0;
+  const daysInMonth = context.daysInMonth ?? 30;
+  const currentDay = context.currentDay ?? 1;
+  const remainingDays = context.remainingDays ?? 30;
+  const dailyLimit = context.dailyLimit ?? 0;
+  const todayExpense = context.todayExpense ?? 0;
+  const categoriesBreakdown = context.categoriesBreakdown ?? {};
+  const recentTransactions = context.recentTransactions ?? [];
+
   const systemInstruction = `Anda adalah "Kang Tambal", penasihat keuangan pribadi cerdas dan ramah yang sangat memahami kondisi ekonomi Indonesia terkini, khususnya wilayah Kota Cimahi dan Kabupaten Bandung Barat (KBB):
 - KBB: Area Jl. Haji Ghofur, Wisata & Kawasan PakuHaji, Desa Cilame, Kecamatan Ngamprah (Kompleks Pemkab KBB, Gadobangkong), Tanimulya, hingga Padalarang.
 - Kota Cimahi: Kelurahan Cipageran (Cimahi Utara), Cimahi Tengah (Gandawijaya, Sangkuriang, Pasar Atas Baru, Pasar Antri Baru), Cimahi Selatan (Kerkof, Leuwigajah, Baros), dan Cimindi.
@@ -241,7 +267,7 @@ Karakter Anda:
 - Ramah, solutif, realistis, empatik, menggunakan Bahasa Indonesia yang akrab (bisa diselingi sapaan akrab khas Sunda/Jabar seperti 'Kang/Teh', 'Pasar Atas', 'Borma', 'Cilame', tanpa berlebihan).
 - FOKUS UTAMA: Memastikan anggaran bulanan pengguna (30 hari) CUKUP dan tidak habis di tengah jalan.
 - Memberikan strategi konkrit:
-  1. ANALISIS KONDISI HARIAN vs 30 HARI: Evaluasi apakah sisa anggaran dibagi sisa hari (${context.remainingDays} hari lagi) aman atau kritis. Berikan batas limit harian yang rasional.
+  1. ANALISIS KONDISI HARIAN vs 30 HARI: Evaluasi apakah sisa anggaran dibagi sisa hari (${remainingDays} hari lagi) aman atau kritis. Berikan batas limit harian yang rasional.
   2. SUBSTITUSI BAHAN POKOK LOKAL CIMAHI & KBB: Berikan alternatif belanja pangan cerdas yang jauh lebih murah tapi tetap bernutrisi tinggi (contoh: sayur mayur segar langsung di pedagang jalur Haji Ghofur & PakuHaji; tempe & tahu Cibuntu; substitusi daging sapi dengan ikan kembung/tongkol segar di Pasar Atas Baru Cimahi atau lapak ikan segar Cipageran).
   3. REKOMENDASI PROMO & TEMPAT BELANJA HEMAT: Sarankan tempat belanja hemat lokal terdekat:
      - Pasar Atas Baru, Pasar Antri Baru, Pasar Kaget Permata/Cilame Permai
@@ -254,29 +280,29 @@ Karakter Anda:
 Format output yang rapi dan terstruktur dengan poin-poin jelas, actionable, dan angka estimasi penghematan dalam Rupiah (Rp).`;
 
   const promptText = `Berikut data keuangan pengguna saat ini:
-- Target Anggaran Bulanan: Rp ${context.monthlyBudget.toLocaleString('id-ID')}
-- Total Pemasukan Tercatat: Rp ${context.totalIncome.toLocaleString('id-ID')}
-- Total Pengeluaran Tercatat: Rp ${context.totalExpense.toLocaleString('id-ID')}
-- Sisa Anggaran: Rp ${context.remainingBudget.toLocaleString('id-ID')}
-- Hari saat ini: Hari ke-${context.currentDay} dari ${context.daysInMonth} hari (Sisa ${context.remainingDays} hari)
-- Batas Limit Pengeluaran Harian: Rp ${context.dailyLimit.toLocaleString('id-ID')} / hari
-- Pengeluaran Hari Ini: Rp ${context.todayExpense.toLocaleString('id-ID')} (${
-    context.todayExpense > context.dailyLimit
+- Target Anggaran Bulanan: Rp ${monthlyBudget.toLocaleString('id-ID')}
+- Total Pemasukan Tercatat: Rp ${totalIncome.toLocaleString('id-ID')}
+- Total Pengeluaran Tercatat: Rp ${totalExpense.toLocaleString('id-ID')}
+- Sisa Anggaran: Rp ${remainingBudget.toLocaleString('id-ID')}
+- Hari saat ini: Hari ke-${currentDay} dari ${daysInMonth} hari (Sisa ${remainingDays} hari)
+- Batas Limit Pengeluaran Harian: Rp ${dailyLimit.toLocaleString('id-ID')} / hari
+- Pengeluaran Hari Ini: Rp ${todayExpense.toLocaleString('id-ID')} (${
+    todayExpense > dailyLimit
       ? 'MELEBIHI LIMIT HARIAN! Perlu penyesuaian segera.'
-      : context.todayExpense >= context.dailyLimit * 0.8
+      : todayExpense >= dailyLimit * 0.8
       ? 'MENDEKATI LIMIT HARIAN (>=80%). Hati-hati.'
       : 'Aman di bawah limit harian.'
   })
 - Rincian Pengeluaran per Kategori:
-${Object.entries(context.categoriesBreakdown)
-  .map(([cat, amt]) => `  • ${cat}: Rp ${amt.toLocaleString('id-ID')}`)
+${Object.entries(categoriesBreakdown)
+  .map(([cat, amt]) => `  • ${cat}: Rp ${(amt || 0).toLocaleString('id-ID')}`)
   .join('\n') || '  (Belum ada data rincian)'}
 - Transaksi Terakhir:
-${context.recentTransactions
+${recentTransactions
   .slice(0, 5)
   .map(
     (t) =>
-      `  • [${t.date}] ${t.type === 'expense' ? 'Pengeluaran' : 'Pemasukan'} Rp ${t.amount.toLocaleString(
+      `  • [${t.date}] ${t.type === 'expense' ? 'Pengeluaran' : 'Pemasukan'} Rp ${(t.amount || 0).toLocaleString(
         'id-ID'
       )} (${t.category}) - ${t.description}`
   )
@@ -288,7 +314,7 @@ Pertanyaan/Kebutuhan Spesifik Pengguna: "${
 
 Tolong berikan:
 1. Status Kesehatan Anggaran (Aman / Waspada / Kritis) & Pacing 30 Hari.
-2. Tindakan Hari Ini (Evaluasi limit pengeluaran hari ini Rp ${context.todayExpense.toLocaleString('id-ID')} vs limit Rp ${context.dailyLimit.toLocaleString('id-ID')}).
+2. Tindakan Hari Ini (Evaluasi limit pengeluaran hari ini Rp ${todayExpense.toLocaleString('id-ID')} vs limit Rp ${dailyLimit.toLocaleString('id-ID')}).
 3. 3 Rekomendasi Substitusi Pangan & Belanja Cerdas Cimahi (sebutkan nama pasar/toko lokal seperti Pasar Atas, Pasar Antri, Borma, Super Indo).
 4. Trik Promo & Penghematan Mingguan.
 5. Rekomendasi Penghasilan Tambahan (jika sisa harian minim).
@@ -335,12 +361,14 @@ export interface SmartShoppingPlan {
 }
 
 export async function generateSmartShoppingList(
-  context: FinancialContext,
+  context: FinancialContext = {} as any,
   userPreference?: string
 ): Promise<SmartShoppingPlan> {
-  const remainingWeeks = Math.max(1, context.remainingDays / 7);
-  const targetWeekly = context.remainingBudget > 0
-    ? Math.round(context.remainingBudget / remainingWeeks)
+  const remainingDays = context.remainingDays ?? 30;
+  const remainingBudget = context.remainingBudget ?? 0;
+  const remainingWeeks = Math.max(1, remainingDays / 7);
+  const targetWeekly = remainingBudget > 0
+    ? Math.round(remainingBudget / remainingWeeks)
     : 250000;
 
   const systemInstruction = `Anda adalah "Kang Tambal AI", Kurator Belanja Cerdas & Pakar Perencana Keuangan Keluarga untuk warga Kota Cimahi dan Kabupaten Bandung Barat (KBB).
@@ -362,8 +390,8 @@ Pedoman Perencanaan:
 - Berikan 'expertTip' yang mengayomi, suportif, dan menenangkan dari sudut pandang pakar perencana keuangan keluarga.`;
 
   const promptText = `Susun Smart Shopping List mingguan untuk keluarga dengan profil:
-- Sisa Anggaran Bulanan: Rp ${context.remainingBudget.toLocaleString('id-ID')}
-- Sisa Waktu Bulan Ini: ${context.remainingDays} hari
+- Sisa Anggaran Bulanan: Rp ${remainingBudget.toLocaleString('id-ID')}
+- Sisa Waktu Bulan Ini: ${remainingDays} hari
 - Estimasi Porsi Anggaran 7 Hari: Rp ${targetWeekly.toLocaleString('id-ID')}
 - Preferensi Pengguna: ${userPreference || 'Seimbang: Gizi keluarga prima, hemat belanja pasar tradisional & toserba Cimahi, anti belanja impulsif'}
 - Konteks Wilayah: ${context.cityContext || 'Cimahi & KBB'}`;

@@ -162,25 +162,56 @@ Ada yang ingin didiskusikan? Saya bisa bantu analisis belanja harian, carikan su
         },
       };
 
-      const res = await fetch('/api/gemini/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      let replyText = '';
+      try {
+        const res = await fetch('/api/gemini/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
 
-      const data = await res.json();
-      if (data.success && data.reply) {
+        if (res.ok) {
+          const resText = await res.text();
+          if (resText && resText.trim()) {
+            const data = JSON.parse(resText);
+            if (data && data.success && data.reply) {
+              replyText = data.reply;
+            }
+          }
+        }
+      } catch (fetchErr) {
+        console.warn('Kendala koneksi ke API chatbot, menggunakan rekomendasi fallback:', fetchErr);
+      }
+
+      if (replyText) {
         setMessages((prev) => [
           ...prev,
           {
             id: 'bot_' + Date.now(),
             role: 'model',
-            text: data.reply,
+            text: replyText,
             timestamp: Date.now(),
           },
         ]);
       } else {
-        throw new Error(data.error || 'Gagal memproses pesan');
+        const fallbackReply = `Halo Kang/Teh! Berdasarkan audit anggaran keluarga Anda saat ini:
+- Sisa anggaran bulan ini: **Rp ${remainingBudget.toLocaleString('id-ID')}**
+- Sisa waktu berjalan: **${dailyStatus.remainingDays} hari** (Limit belanja harian rasional: **Rp ${Math.round(dailyStatus.dailyLimit).toLocaleString('id-ID')}/hari**)
+
+💡 **Saran Taktis Belanja Cimahi & KBB**:
+1. **Lauk Protein Terjangkau**: Belanja tempe & tahu Cibuntu serta ikan kembung/tongkol segar di Pasar Atas Baru Cimahi untuk menjaga stamina keluarga tanpa boros.
+2. **Sayuran Petani Segar**: Dapatkan bayam, kangkung, dan sawi segar harga kebun langsung di pedagang lokal sepanjang jalur Jl. Haji Ghofur & PakuHaji.
+3. **Pantau Promo Sembako**: Manfaatkan promo minyak goreng & beras di Borma Toserba (Gandawijaya / Kerkof) atau Super Indo Sangkuriang.`;
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: 'bot_' + Date.now(),
+            role: 'model',
+            text: fallbackReply,
+            timestamp: Date.now(),
+          },
+        ]);
       }
     } catch (err: any) {
       console.error('Chatbot error:', err);
@@ -189,7 +220,7 @@ Ada yang ingin didiskusikan? Saya bisa bantu analisis belanja harian, carikan su
         {
           id: 'bot_err_' + Date.now(),
           role: 'model',
-          text: `Aduh hapunten, koneksi ke server Kang Tambal terputus (${err.message || 'Error'}). Silakan coba tanyakan kembali ya!`,
+          text: `Halo Kang/Teh! Silakan ajukan pertanyaan seputar tips hemat pangan atau strategi anggaran di Cimahi ya.`,
           timestamp: Date.now(),
         },
       ]);

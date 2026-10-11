@@ -86,22 +86,27 @@ export const DailySmartTipsSection: React.FC<DailySmartTipsSectionProps> = ({
         }),
       });
 
-      const data = await res.json();
-      if (data.success && data.tips && data.tips.length > 0) {
-        setTips(data.tips);
-        const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        setLastUpdated(nowTime);
+      if (res.ok) {
+        const text = await res.text();
+        if (text && text.trim()) {
+          const data = JSON.parse(text);
+          if (data && data.success && data.tips && data.tips.length > 0) {
+            setTips(data.tips);
+            const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            setLastUpdated(nowTime);
 
-        // Cache for today
-        const todayStr = new Date().toISOString().split('T')[0];
-        localStorage.setItem(
-          STORAGE_KEY_DAILY_TIPS,
-          JSON.stringify({
-            date: todayStr,
-            time: nowTime,
-            tips: data.tips,
-          })
-        );
+            // Cache for today
+            const todayStr = new Date().toISOString().split('T')[0];
+            localStorage.setItem(
+              STORAGE_KEY_DAILY_TIPS,
+              JSON.stringify({
+                date: todayStr,
+                time: nowTime,
+                tips: data.tips,
+              })
+            );
+          }
+        }
       }
     } catch (e) {
       console.warn('Failed to fetch daily tips, using fallback:', e);
