@@ -18,6 +18,7 @@ import {
   Moon,
   Monitor,
   RotateCcw,
+  Download,
 } from 'lucide-react';
 import {
   BudgetConfig,
@@ -26,6 +27,7 @@ import {
 } from '../types/finance.ts';
 import { NotificationService } from '../services/notifications.ts';
 import { FinanceDB } from '../services/db.ts';
+import { MBerLogo } from './MBerLogo.tsx';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -529,6 +531,75 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </button>
               );
             })}
+          </div>
+
+          {/* Logo Showcase Section for Light & Dark Mode */}
+          <div className="mt-4 p-4 rounded-2xl bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Penyesuaian Logo Resmi M-Ber (Light & Dark Mode)
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Logo telah dioptimalkan dengan kontras presisi dan palet warna adaptif:
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Light Mode Preview Card */}
+              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-col items-center justify-between text-center space-y-3">
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                    Mode Terang (Light)
+                  </span>
+                  <a
+                    href="/logo-light.svg"
+                    download="M-Ber_Logo_Light.svg"
+                    className="text-[10px] font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 hover:underline"
+                    title="Unduh SVG Mode Terang"
+                  >
+                    <Download className="w-3 h-3" /> Unduh SVG
+                  </a>
+                </div>
+
+                <div className="py-2">
+                  <MBerLogo variant="full" size="xl" isDark={false} showSubtitle={true} subtitle="Harmoni Keuangan Keluarga" />
+                </div>
+
+                <div className="w-full pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                  <span className="font-mono">Hex: #23533E & #2D6A4F</span>
+                  <span className="text-emerald-800 font-semibold">Forest Emerald</span>
+                </div>
+              </div>
+
+              {/* Dark Mode Preview Card */}
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 shadow-md flex flex-col items-center justify-between text-center space-y-3">
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-800/80">
+                    Mode Gelap (Dark)
+                  </span>
+                  <a
+                    href="/logo-dark.svg"
+                    download="M-Ber_Logo_Dark.svg"
+                    className="text-[10px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 hover:underline"
+                    title="Unduh SVG Mode Gelap"
+                  >
+                    <Download className="w-3 h-3" /> Unduh SVG
+                  </a>
+                </div>
+
+                <div className="py-2">
+                  <MBerLogo variant="full" size="xl" isDark={true} showSubtitle={true} subtitle="Harmoni Keuangan Keluarga" />
+                </div>
+
+                <div className="w-full pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
+                  <span className="font-mono">Hex: #34D399 & #FFFFFF</span>
+                  <span className="text-emerald-400 font-semibold">Luminous Mint</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

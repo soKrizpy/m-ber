@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Light Mode Gradient for subtle premium depth -->
+    <linearGradient id="mber-green-light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D6A4F" />
+      <stop offset="100%" stop-color="#23533E" />
+    </linearGradient>
+    <linearGradient id="mber-arrow-light" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#2D6A4F" />
+      <stop offset="100%" stop-color="#38A169" />
+    </linearGradient>
+  </defs>
+
+  <!-- M-Ber Icon Group -->
+  <g id="mber-icon" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer 'M' Shape & Left/Right Stems -->
+    <!-- Left vertical stem & arch -->
+    <path 
+      d="M 105 340 L 105 105 C 105 65 145 52 175 82 L 250 162" 
+      stroke="url(#mber-green-light)" 
+      stroke-width="24" 
+    />
+    
+    <!-- Right diagonal & Right vertical stem -->
+    <path 
+      d="M 250 162 L 325 82 C 355 52 395 65 395 105 L 395 340" 
+      stroke="url(#mber-green-light)" 
+      stroke-width="24" 
+    />
+
+    <!-- House Roof -->
+    <path 
+      d="M 148 260 L 250 165 L 342 250" 
+      stroke="url(#mber-green-light)" 
+      stroke-width="24" 
+    />
+
+    <!-- House Body / Base -->
+    <path 
+      d="M 175 258 L 175 320 C 175 338 190 348 210 348 L 290 348 C 310 348 325 338 325 320 L 325 248" 
+      stroke="url(#mber-green-light)" 
+      stroke-width="24" 
+    />
+
+    <!-- Chimney Shaft -->
+    <path 
+      d="M 325 240 L 325 170" 
+      stroke="url(#mber-arrow-light)" 
+      stroke-width="24" 
+    />
+
+    <!-- Upward Growth Arrowhead on Chimney -->
+    <path 
+      d="M 298 174 L 325 136 L 352 174 Z" 
+      fill="#2D6A4F" 
+      stroke="#2D6A4F" 
+      stroke-width="6" 
+    />
+
+    <!-- Window (Arched 4-pane Window) -->
+    <!-- Top-left pane (Arched top-left) -->
+    <path 
+      d="M 222 252 L 222 238 C 222 228 228 224 238 224 L 241 224 L 241 252 Z" 
+      fill="#2D6A4F" 
+    />
+    <!-- Top-right pane (Arched top-right) -->
+    <path 
+      d="M 249 252 L 249 224 L 252 224 C 262 224 268 228 268 238 L 268 252 Z" 
+      fill="#2D6A4F" 
+    />
+    <!-- Bottom-left pane -->
+    <rect 
+      x="222" y="259" width="19" height="19" rx="3" 
+      fill="#2D6A4F" 
+    />
+    <!-- Bottom-right pane -->
+    <rect 
+      x="249" y="259" width="19" height="19" rx="3" 
+      fill="#2D6A4F" 
+    />
+  </g>
+
+  <!-- Wordmark 'M-Ber' (Light Mode: Deep Forest Green) -->
+  <text 
+    x="250" 
+    y="442" 
+    text-anchor="middle" 
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" 
+    font-size="80" 
+    font-weight="900" 
+    letter-spacing="-1.5px" 
+    fill="#23533E"
+  >M-Ber</text>
+</svg>

@@ -262,18 +262,24 @@ export const SmartShoppingListSection: React.FC<SmartShoppingListSectionProps> =
       }
 
       const responseText = await response.text();
-      if (!responseText || !responseText.trim()) {
-        throw new Error('Respons server kosong');
+      let data: any = null;
+      try {
+        if (responseText && responseText.trim()) {
+          data = JSON.parse(responseText);
+        }
+      } catch (parseErr: any) {
+        console.warn('Respons bukan format JSON valid, beralih ke rekomendasi lokal Cimahi.');
       }
 
-      const data = JSON.parse(responseText);
-      if (data.success && data.plan) {
+      if (data && data.success && data.plan) {
         setPlan(data.plan);
         // Reset checklist for new plan
         setCheckedIds({});
         onToast('Smart Shopping List mingguan berhasil diperbarui oleh Gemini AI!', 'success');
       } else {
-        throw new Error(data.error || 'Gagal memuat rencana belanja.');
+        const fallbackPlan = createLocalFallbackPlan(remainingBudget, preference);
+        setPlan(fallbackPlan);
+        onToast('Daftar belanja cerdas rekomendasi lokal Cimahi siap digunakan.', 'info');
       }
     } catch (err: any) {
       console.warn('Menggunakan fallback lokal untuk Smart Shopping List:', err?.message || err);

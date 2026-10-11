@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { SyncStatus } from '../types/finance.ts';
 import { User } from 'firebase/auth';
+import { MBerLogo } from './MBerLogo.tsx';
 
 interface NavbarProps {
   isDark: boolean;
@@ -56,10 +57,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div
             className="flex items-center space-x-2.5 cursor-pointer select-none group"
             onClick={onNavigateHome}
-            title="Kembali ke Ringkasan"
+            title="Kembali ke Ringkasan M-Ber"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 shrink-0 group-hover:scale-105 transition-transform">
-              <Wallet className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl p-1 bg-emerald-50 dark:bg-slate-800/90 border border-emerald-200/60 dark:border-slate-700/80 flex items-center justify-center shadow-sm shadow-emerald-500/10 shrink-0 group-hover:scale-105 transition-all">
+              <MBerLogo variant="icon" size={32} isDark={isDark} />
             </div>
             <div>
               <div className="flex items-center space-x-2">

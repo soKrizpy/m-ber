@@ -92,8 +92,7 @@ Tugas Anda adalah menghasilkan 3 sampai 4 tips cerdas praktis untuk HARI INI yan
             required: ['title', 'category', 'summary', 'actionableAdvice', 'locationOrPlace', 'estimatedSavings'],
           },
         },
-      },
-    });
+      });
 
     const parsed: DailySmartTip[] = JSON.parse(response.text || '[]');
     return parsed.length > 0 ? parsed : getFallbackDailyTips();
@@ -416,8 +415,7 @@ Pedoman Perencanaan:
           },
           required: ['weeklyAllocation', 'totalEstimatedCost', 'periodName', 'cimahiMarketInsight', 'expertTip', 'items'],
         },
-      },
-    });
+      });
 
     const parsed = JSON.parse(response.text || '{}');
     if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
