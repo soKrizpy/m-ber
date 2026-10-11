@@ -111,3 +111,31 @@ export interface SavingsGoal {
   createdAt: number;
   updatedAt: number;
 }
+
+export type ShoppingCategory =
+  | 'Protein & Lauk'
+  | 'Sayur & Bumbu Segar'
+  | 'Sembako & Pangan Pokok'
+  | 'Kebutuhan Esensial Rumah'
+  | 'Camilan Sehat & Buah';
+
+export interface SmartShoppingItem {
+  id: string;
+  name: string;
+  quantity: string;
+  estimatedPrice: number;
+  category: ShoppingCategory;
+  recommendedPlace: string;
+  antiImpulsiveReason: string;
+  isEssential: boolean;
+}
+
+export interface SmartShoppingPlan {
+  weeklyAllocation: number;
+  totalEstimatedCost: number;
+  remainingBudget: number;
+  periodName: string;
+  cimahiMarketInsight: string;
+  items: SmartShoppingItem[];
+  expertTip: string;
+}

@@ -14,81 +14,15 @@ export function getCurrentMonthStr(): string {
   return `${year}-${month}`;
 }
 
-// Initial sample data customized for Cimahi context so new users see a populated dashboard immediately
-const INITIAL_TRANSACTIONS: Transaction[] = [
-  {
-    id: 'tx-1',
-    date: new Date().toISOString().split('T')[0],
-    time: '08:30',
-    type: 'expense',
-    category: 'Makanan & Minuman',
-    amount: 18000,
-    description: 'Sarapan Lontong Kari Baros Cimahi',
-    paymentMethod: 'QRIS / E-Wallet',
-    isSynced: false,
-    createdAt: Date.now() - 3600000 * 5,
-    updatedAt: Date.now() - 3600000 * 5,
-  },
-  {
-    id: 'tx-2',
-    date: new Date().toISOString().split('T')[0],
-    time: '11:15',
-    type: 'expense',
-    category: 'Bahan Pokok & Pasar',
-    amount: 45000,
-    description: 'Belanja sayur, tempe & telur di Pasar Antri Baru',
-    paymentMethod: 'Tunai',
-    isSynced: false,
-    createdAt: Date.now() - 3600000 * 3,
-    updatedAt: Date.now() - 3600000 * 3,
-  },
-  {
-    id: 'tx-3',
-    date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-    time: '14:20',
-    type: 'expense',
-    category: 'Transportasi & Bensin',
-    amount: 25000,
-    description: 'Isi Pertalite SPBU Leuwigajah',
-    paymentMethod: 'Tunai',
-    isSynced: false,
-    createdAt: Date.now() - 86400000,
-    updatedAt: Date.now() - 86400000,
-  },
-  {
-    id: 'tx-4',
-    date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
-    time: '19:00',
-    type: 'expense',
-    category: 'Tagihan (Listrik/Air/WiFi)',
-    amount: 150000,
-    description: 'Token Listrik PLN Cimahi Tengah',
-    paymentMethod: 'Transfer Bank',
-    isSynced: false,
-    createdAt: Date.now() - 86400000 * 2,
-    updatedAt: Date.now() - 86400000 * 2,
-  },
-  {
-    id: 'tx-5',
-    date: new Date().toISOString().slice(0, 7) + '-01',
-    time: '09:00',
-    type: 'income',
-    category: 'Gaji Pokok / Uang Bulanan',
-    amount: 3800000,
-    description: 'Uang Bulanan / Gaji Awal Bulan',
-    paymentMethod: 'Transfer Bank',
-    isSynced: false,
-    createdAt: Date.now() - 86400000 * 5,
-    updatedAt: Date.now() - 86400000 * 5,
-  },
-];
+// Initial transactions: clean slate starting from 0
+const INITIAL_TRANSACTIONS: Transaction[] = [];
 
 const DEFAULT_CONFIG: BudgetConfig = {
-  monthlyBudget: 3500000,
+  monthlyBudget: 0,
   month: getCurrentMonthStr(),
   warningThresholdPct: 80,
   autoDailyLimit: true,
-  customDailyLimit: 100000,
+  customDailyLimit: 0,
   cityContext: 'Kota Cimahi & KBB (Haji Ghofur, PakuHaji, Desa Cilame, Kec. Ngamprah, Cipageran)',
 };
 
@@ -100,8 +34,31 @@ const DEFAULT_SYNC: SyncStatus = {
   sheetsSpreadsheetUrl: null,
   gasWebAppUrl: null,
   syncMode: 'oauth_sheets',
-  syncLog: ['Aplikasi siap digunakan dalam mode offline-first.'],
+  syncLog: ['Aplikasi siap digunakan dalam mode offline-first (Saldo awal 0).'],
 };
+
+// Automatic one-time reset execution to enforce 0 for existing sessions
+const RESET_ZERO_TAG = 'm_ber_reset_all_numbers_zero_v6';
+if (typeof window !== 'undefined' && !localStorage.getItem(RESET_ZERO_TAG)) {
+  try {
+    localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEY_SAVINGS_GOALS, JSON.stringify([]));
+    const rawCfg = localStorage.getItem(STORAGE_KEY_CONFIG);
+    const existing = rawCfg ? JSON.parse(rawCfg) : DEFAULT_CONFIG;
+    localStorage.setItem(
+      STORAGE_KEY_CONFIG,
+      JSON.stringify({
+        ...existing,
+        monthlyBudget: 0,
+        customDailyLimit: 0,
+      })
+    );
+    localStorage.removeItem(STORAGE_KEY_PENDING_QUEUE);
+    localStorage.setItem(RESET_ZERO_TAG, 'true');
+  } catch (e) {
+    console.warn('Auto reset to zero error:', e);
+  }
+}
 
 export class FinanceDB {
   static getTransactions(): Transaction[] {
@@ -256,21 +213,7 @@ export class FinanceDB {
     try {
       const data = localStorage.getItem(STORAGE_KEY_SAVINGS_GOALS);
       if (!data) {
-        // Sample default goal for user in Cimahi
-        const initialGoal: SavingsGoal = {
-          id: 'goal-dana-darurat',
-          title: 'Dana Darurat & Kebutuhan Masa Depan',
-          targetAmount: 5000000,
-          targetDate: new Date(Date.now() + 86400000 * 90).toISOString().split('T')[0], // 3 months ahead
-          category: 'Dana Darurat',
-          initialSavedAmount: 750000,
-          surplusAllocationPct: 100,
-          notes: 'Dipupuk dari sisa surplus kuota belanja & anggaran bulanan',
-          createdAt: Date.now() - 86400000 * 10,
-          updatedAt: Date.now() - 86400000 * 10,
-        };
-        this.saveSavingsGoals([initialGoal]);
-        return [initialGoal];
+        return [];
       }
       return JSON.parse(data);
     } catch {
@@ -281,6 +224,27 @@ export class FinanceDB {
   static saveSavingsGoals(goals: SavingsGoal[]) {
     localStorage.setItem(STORAGE_KEY_SAVINGS_GOALS, JSON.stringify(goals));
     window.dispatchEvent(new Event('finance_savings_updated'));
+  }
+
+  static resetAllDataToZero() {
+    if (typeof window === 'undefined') return;
+    this.saveTransactions([]);
+    this.saveBudgetConfig({
+      ...DEFAULT_CONFIG,
+      monthlyBudget: 0,
+      customDailyLimit: 0,
+    });
+    this.saveSavingsGoals([]);
+    localStorage.removeItem(STORAGE_KEY_PENDING_QUEUE);
+
+    const sync = this.getSyncStatus();
+    sync.pendingCount = 0;
+    this.saveSyncStatus(sync);
+
+    window.dispatchEvent(new Event('finance_db_updated'));
+    window.dispatchEvent(new Event('finance_config_updated'));
+    window.dispatchEvent(new Event('finance_savings_updated'));
+    window.dispatchEvent(new Event('finance_sync_updated'));
   }
 
   static addSavingsGoal(goal: Omit<SavingsGoal, 'id' | 'createdAt' | 'updatedAt'>): SavingsGoal {

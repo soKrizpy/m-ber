@@ -45,7 +45,7 @@ export const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({
   const handleSaveBudget = (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = parseInt(tempBudget.replace(/\D/g, ''), 10);
-    if (!isNaN(parsed) && parsed > 0) {
+    if (!isNaN(parsed) && parsed >= 0) {
       onUpdateConfig({
         ...config,
         monthlyBudget: parsed,

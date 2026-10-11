@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  RotateCcw,
 } from 'lucide-react';
 import {
   BudgetConfig,
@@ -24,6 +25,7 @@ import {
   EXPENSE_CATEGORIES,
 } from '../types/finance.ts';
 import { NotificationService } from '../services/notifications.ts';
+import { FinanceDB } from '../services/db.ts';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -527,6 +529,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Reset Data Section */}
+        <div className="pt-2">
+          <div className="p-3.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset Semua Angka ke 0
+              </p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+                Kosongkan riwayat transaksi dan kembalikan semua saldo/anggaran mulai dari 0.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Apakah Anda yakin ingin mereset semua transaksi dan angka kembali dari 0?')) {
+                  FinanceDB.resetAllDataToZero();
+                  onUpdateConfig(FinanceDB.getBudgetConfig());
+                  onClose();
+                }
+              }}
+              className="px-3.5 py-1.5 text-xs font-bold bg-white dark:bg-rose-900/60 text-rose-600 dark:text-rose-200 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-300 dark:border-rose-700 rounded-xl transition shadow-2xs shrink-0"
+            >
+              Reset ke 0
+            </button>
           </div>
         </div>
 

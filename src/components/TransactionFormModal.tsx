@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   PlusCircle,
@@ -40,6 +40,13 @@ interface TransactionFormModalProps {
     time: string;
   }) => void;
   dailyStatus: DailyLimitStatus;
+  initialData?: {
+    type?: TransactionType;
+    category?: string;
+    amount?: number;
+    description?: string;
+    paymentMethod?: PaymentMethod;
+  } | null;
 }
 
 const CATEGORY_ICON_MAP: Record<string, React.ReactNode> = {
@@ -76,6 +83,7 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
   onClose,
   onSubmit,
   dailyStatus,
+  initialData,
 }) => {
   const [type, setType] = useState<TransactionType>('expense');
   const [category, setCategory] = useState<string>('Makanan & Minuman');
@@ -89,6 +97,23 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
   
   const [date, setDate] = useState<string>(todayStr);
   const [time, setTime] = useState<string>(timeStr);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        if (initialData.type) setType(initialData.type);
+        if (initialData.category) setCategory(initialData.category);
+        if (initialData.amount) setAmount(initialData.amount.toString());
+        if (initialData.description) setDescription(initialData.description);
+        if (initialData.paymentMethod) setPaymentMethod(initialData.paymentMethod);
+      } else {
+        setType('expense');
+        setCategory('Makanan & Minuman');
+        setAmount('');
+        setDescription('');
+      }
+    }
+  }, [isOpen, initialData]);
 
   if (!isOpen) return null;
 

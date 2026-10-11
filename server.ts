@@ -2,7 +2,13 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { generateBudgetAdvice, chatBudgetAdvisor, generateDailySmartTips, FinancialContext } from './api/geminiAdvisor.ts';
+import {
+  generateBudgetAdvice,
+  chatBudgetAdvisor,
+  generateDailySmartTips,
+  generateSmartShoppingList,
+  type FinancialContext,
+} from './api/geminiAdvisor.ts';
 
 dotenv.config();
 
@@ -11,8 +17,24 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(express.json());
+
+// API endpoint for Gemini Smart Shopping List
+app.post('/api/gemini/smart-shopping-list', async (req, res) => {
+  try {
+    const { context, userPreference } = req.body;
+    const shoppingPlan = await generateSmartShoppingList(context || {}, userPreference);
+    res.json({ success: true, plan: shoppingPlan });
+  } catch (error: any) {
+    console.error('Error generating smart shopping list:', error);
+    res.status(500).json({
+      success: false,
+      error: error?.message || 'Gagal memproses daftar belanja cerdas.',
+    });
+  }
+});
 
 // API endpoint for Gemini Daily Smart Tips
 app.post('/api/gemini/daily-tips', async (req, res) => {
@@ -59,15 +81,24 @@ app.post('/api/gemini/advisor', async (req, res) => {
   }
 });
 
-// Serve static frontend assets from dist in production
-const distPath = path.resolve(__dirname, 'dist');
-app.use(express.static(distPath));
+if (!isProduction) {
+  const { createServer: createViteServer } = await import('vite');
+  const vite = await createViteServer({
+    server: { middlewareMode: true },
+    appType: 'spa',
+  });
+  app.use(vite.middlewares);
+} else {
+  // Serve static frontend assets from dist in production
+  const distPath = path.resolve(__dirname, 'dist');
+  app.use(express.static(distPath));
 
-// Fallback to index.html for SPA
-app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
-});
+  // Fallback to index.html for SPA
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
-app.listen(PORT, () => {
+app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server Dompet Pintar Cimahi running on port ${PORT}`);
 });

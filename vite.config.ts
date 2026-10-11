@@ -1,91 +1,11 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig, Plugin} from 'vite';
-import dotenv from 'dotenv';
-import { generateBudgetAdvice, chatBudgetAdvisor, generateDailySmartTips } from './api/geminiAdvisor.ts';
-
-dotenv.config();
-
-function geminiApiPlugin(): Plugin {
-  return {
-    name: 'gemini-api-plugin',
-    configureServer(server) {
-      server.middlewares.use(async (req, res, next) => {
-        if (req.url === '/api/gemini/daily-tips' && req.method === 'POST') {
-          let body = '';
-          req.on('data', chunk => {
-            body += chunk;
-          });
-          req.on('end', async () => {
-            try {
-              const data = JSON.parse(body || '{}');
-              const tips = await generateDailySmartTips(data);
-              res.setHeader('Content-Type', 'application/json');
-              res.statusCode = 200;
-              res.end(JSON.stringify({ success: true, tips }));
-            } catch (err: any) {
-              console.error('Gemini daily tips error:', err);
-              res.setHeader('Content-Type', 'application/json');
-              res.statusCode = 500;
-              res.end(JSON.stringify({ success: false, error: err?.message || 'Error generating daily tips' }));
-            }
-          });
-          return;
-        }
-
-        if (req.url === '/api/gemini/chat' && req.method === 'POST') {
-          let body = '';
-          req.on('data', chunk => {
-            body += chunk;
-          });
-          req.on('end', async () => {
-            try {
-              const data = JSON.parse(body || '{}');
-              const reply = await chatBudgetAdvisor(data.messages || [], data.context || {});
-              res.setHeader('Content-Type', 'application/json');
-              res.statusCode = 200;
-              res.end(JSON.stringify({ success: true, reply }));
-            } catch (err: any) {
-              console.error('Gemini chat error:', err);
-              res.setHeader('Content-Type', 'application/json');
-              res.statusCode = 500;
-              res.end(JSON.stringify({ success: false, error: err?.message || 'Error processing AI chat' }));
-            }
-          });
-          return;
-        }
-
-        if (req.url === '/api/gemini/advisor' && req.method === 'POST') {
-          let body = '';
-          req.on('data', chunk => {
-            body += chunk;
-          });
-          req.on('end', async () => {
-            try {
-              const data = JSON.parse(body || '{}');
-              const advice = await generateBudgetAdvice(data);
-              res.setHeader('Content-Type', 'application/json');
-              res.statusCode = 200;
-              res.end(JSON.stringify({ success: true, advice }));
-            } catch (err: any) {
-              console.error('Gemini advisor error:', err);
-              res.setHeader('Content-Type', 'application/json');
-              res.statusCode = 500;
-              res.end(JSON.stringify({ success: false, error: err?.message || 'Error processing AI advice' }));
-            }
-          });
-          return;
-        }
-        next();
-      });
-    },
-  };
-}
+import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), geminiApiPlugin()],
+    plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

@@ -10,6 +10,24 @@ const ai = new GoogleGenAI({
   },
 });
 
+async function callGemini(contents: any, config?: any) {
+  const models = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+  let lastError: any = null;
+  for (const model of models) {
+    try {
+      return await ai.models.generateContent({
+        model,
+        contents,
+        config,
+      });
+    } catch (err: any) {
+      console.warn(`[Gemini] model ${model} attempt failed:`, err?.message || err);
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
 export interface DailySmartTip {
   title: string;
   category: 'Pangan Hemat' | 'Promo Belanja' | 'Batas Harian' | 'Trik Cuan';
@@ -20,8 +38,6 @@ export interface DailySmartTip {
 }
 
 export async function generateDailySmartTips(context: FinancialContext): Promise<DailySmartTip[]> {
-  const model = 'gemini-3.8-flash';
-
   const systemInstruction = `Anda adalah "Kang Tambal", kurator tips belanja hemat dan pengelolaan anggaran harian untuk warga Kota Cimahi dan Kabupaten Bandung Barat (KBB), mencakup:
 - Kabupaten Bandung Barat: Area Jl. H. Gofur / Haji Ghofur, PakuHaji / Wisata Kuda Pakuhaji, Desa Cilame, Kecamatan Ngamprah (Kompleks Pemkab KBB / Stasiun KCIC Padalarang / Jl. Raya Cilame - Gadobangkong), serta Padalarang.
 - Kota Cimahi: Cipageran (Cimahi Utara), Cimahi Tengah (Gandawijaya, Sangkuriang, Pasar Atas Baru, Pasar Antri Baru), Cimahi Selatan (Kerkof, Leuwigajah, Baros), dan Cimindi.
@@ -51,13 +67,10 @@ Tugas Anda adalah menghasilkan 3 sampai 4 tips cerdas praktis untuk HARI INI yan
 - Kategori Belanja Terbesar: ${Object.keys(context.categoriesBreakdown).slice(0, 3).join(', ') || 'Belanja umum'}`;
 
   try {
-    const response = await ai.models.generateContent({
-      model,
-      contents: promptText,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: {
+    const response = await callGemini(promptText, {
+      systemInstruction,
+      responseMimeType: 'application/json',
+      responseSchema: {
           type: Type.ARRAY,
           items: {
             type: Type.OBJECT,
@@ -207,22 +220,20 @@ Gaya Komunikasi & Format:
     parts: [{ text: m.text }],
   }));
 
-  const response = await ai.models.generateContent({
-    model,
-    contents,
-    config: {
+  try {
+    const response = await callGemini(contents, {
       systemInstruction,
       temperature: 0.7,
       topP: 0.9,
-    },
-  });
-
-  return response.text || 'Maaf, Kang Tambal sedang menyiapkan data. Coba tanyakan kembali ya!';
+    });
+    return response.text || 'Maaf, Kang Tambal sedang menyiapkan data. Coba tanyakan kembali ya!';
+  } catch (err) {
+    console.error('Error in chatBudgetAdvisor:', err);
+    return 'Maaf, sistem AI sedang padat sesaat. Tips singkat: Utamakan belanja lauk protein terjangkau seperti telur & tempe Cibuntu, serta belanja sayur kebun di jalur Haji Ghofur untuk menghemat pengeluaran!';
+  }
 }
 
 export async function generateBudgetAdvice(context: FinancialContext) {
-  const model = 'gemini-3.8-flash';
-
   const systemInstruction = `Anda adalah "Kang Tambal", penasihat keuangan pribadi cerdas dan ramah yang sangat memahami kondisi ekonomi Indonesia terkini, khususnya wilayah Kota Cimahi dan Kabupaten Bandung Barat (KBB):
 - KBB: Area Jl. Haji Ghofur, Wisata & Kawasan PakuHaji, Desa Cilame, Kecamatan Ngamprah (Kompleks Pemkab KBB, Gadobangkong), Tanimulya, hingga Padalarang.
 - Kota Cimahi: Kelurahan Cipageran (Cimahi Utara), Cimahi Tengah (Gandawijaya, Sangkuriang, Pasar Atas Baru, Pasar Antri Baru), Cimahi Selatan (Kerkof, Leuwigajah, Baros), dan Cimindi.
@@ -284,15 +295,254 @@ Tolong berikan:
 5. Rekomendasi Penghasilan Tambahan (jika sisa harian minim).
 6. Kalimat motivasi penutup.`;
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: promptText,
-    config: {
+  try {
+    const response = await callGemini(promptText, {
       systemInstruction,
       temperature: 0.7,
       topP: 0.9,
-    },
-  });
+    });
+    return response.text || 'Gagal menghasilkan saran anggaran dari Gemini AI.';
+  } catch (err) {
+    console.error('Error generating budget advice:', err);
+    return `### Status Anggaran Keluarga Cimahi
+Sisa anggaran Anda saat ini adalah **Rp ${context.remainingBudget.toLocaleString('id-ID')}** untuk **${context.remainingDays} hari ke depan** (limit harian rasional: **Rp ${Math.round(context.dailyLimit).toLocaleString('id-ID')}**).
 
-  return response.text || 'Gagal menghasilkan saran anggaran dari Gemini AI.';
+### Rekomendasi Belanja Cerdas Cimahi
+1. **Lauk Bergizi Hemat**: Belanja tempe/tahu Cibuntu dan ikan kembung segar di Pasar Atas Baru Cimahi untuk sumber protein prima hemat biaya.
+2. **Sayuran Petani Jalur Haji Ghofur**: Dapatkan bayam, kangkung, dan sawi segar harga langsung kebun di sepanjang jalur Jl. Haji Ghofur & PakuHaji.
+3. **Sembako Promo JSM**: Kunjungi Borma Toserba Gandawijaya / Kerkof untuk minyak goreng dan beras kemasan hemat.`;
+  }
+}
+
+export interface SmartShoppingItem {
+  id: string;
+  name: string;
+  quantity: string;
+  estimatedPrice: number;
+  category: 'Protein & Lauk' | 'Sayur & Bumbu Segar' | 'Sembako & Pangan Pokok' | 'Kebutuhan Esensial Rumah' | 'Camilan Sehat & Buah';
+  recommendedPlace: string;
+  antiImpulsiveReason: string;
+  isEssential: boolean;
+}
+
+export interface SmartShoppingPlan {
+  weeklyAllocation: number;
+  totalEstimatedCost: number;
+  remainingBudget: number;
+  periodName: string;
+  cimahiMarketInsight: string;
+  items: SmartShoppingItem[];
+  expertTip: string;
+}
+
+export async function generateSmartShoppingList(
+  context: FinancialContext,
+  userPreference?: string
+): Promise<SmartShoppingPlan> {
+  const remainingWeeks = Math.max(1, context.remainingDays / 7);
+  const targetWeekly = context.remainingBudget > 0
+    ? Math.round(context.remainingBudget / remainingWeeks)
+    : 250000;
+
+  const systemInstruction = `Anda adalah "Kang Tambal AI", Kurator Belanja Cerdas & Pakar Perencana Keuangan Keluarga untuk warga Kota Cimahi dan Kabupaten Bandung Barat (KBB).
+Tugas Anda adalah merancang "Smart Shopping List" mingguan (alokasi 7 hari) yang realistis, bergizi seimbang, dan hemat berbasis tren harga aktual di wilayah Cimahi & sekitarnya, sehingga keluarga tidak terjebak belanja impulsif (*impulsive buying*).
+
+Lokasi Belanja Acuan Cimahi & KBB:
+1. Pasar Atas Baru Cimahi (Cimahi Utara/Tengah): Sentra sayuran segar subuh, ayam potong segar, ikan kembung/tongkol, dan bumbu dapur lengkap.
+2. Pasar Antri Baru (Cimahi Tengah): Pilihan rempah, bahan kering, dan perlengkapan rumah tangga terjangkau.
+3. Jalur Jl. Haji Ghofur & PakuHaji (KBB): Lapak pedagang sayur murah langsung dari petani Cisarua/Lembang (bayam, sawi, wortel, labu siam).
+4. Desa Cilame / Kompleks Pemkab KBB / Gadobangkong: Warung sayur lokal & minimarket hemat.
+5. Super Indo Sangkuriang Cimahi: Pilihan protein higienis, susu, dan buah diskon teratur.
+6. Borma Toserba (Borma Gandawijaya / Borma Kerkof): Pusat sembako murah (minyak goreng, beras, gula, bumbu sachet, sabun/deterjen kemasan refill).
+
+Pedoman Perencanaan:
+- Total estimasi belanja mingguan harus seimbang dengan alokasi mingguan (sekitar Rp ${targetWeekly.toLocaleString('id-ID')}).
+- Susun 7-10 item pokok lintas kategori: 'Protein & Lauk', 'Sayur & Bumbu Segar', 'Sembako & Pangan Pokok', 'Kebutuhan Esensial Rumah', dan 'Camilan Sehat & Buah'.
+- Pada setiap item, sertakan 'antiImpulsiveReason' yang menjelaskan bagaimana item ini mencegah pengeluaran jajan impulsif atau pesan makanan instan berlebih.
+- Berikan wawasan pasar Cimahi ('cimahiMarketInsight') tentang tren harga saat ini di Cimahi.
+- Berikan 'expertTip' yang mengayomi, suportif, dan menenangkan dari sudut pandang pakar perencana keuangan keluarga.`;
+
+  const promptText = `Susun Smart Shopping List mingguan untuk keluarga dengan profil:
+- Sisa Anggaran Bulanan: Rp ${context.remainingBudget.toLocaleString('id-ID')}
+- Sisa Waktu Bulan Ini: ${context.remainingDays} hari
+- Estimasi Porsi Anggaran 7 Hari: Rp ${targetWeekly.toLocaleString('id-ID')}
+- Preferensi Pengguna: ${userPreference || 'Seimbang: Gizi keluarga prima, hemat belanja pasar tradisional & toserba Cimahi, anti belanja impulsif'}
+- Konteks Wilayah: ${context.cityContext || 'Cimahi & KBB'}`;
+
+  try {
+    const response = await callGemini(promptText, {
+      systemInstruction,
+      responseMimeType: 'application/json',
+      responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            weeklyAllocation: { type: Type.NUMBER, description: 'Alokasi belanja mingguan dalam Rupiah' },
+            totalEstimatedCost: { type: Type.NUMBER, description: 'Total estimasi belanja seluruh item' },
+            periodName: { type: Type.STRING, description: 'Contoh: Menu 7 Hari Penuh Cinta & Gizi Seimbang' },
+            cimahiMarketInsight: {
+              type: Type.STRING,
+              description: 'Tren harga komoditas pangan terkini di pasar tradisional & supermarket Cimahi/KBB',
+            },
+            expertTip: {
+              type: Type.STRING,
+              description: 'Nasihat mengayomi dari pakar keluarga untuk menghindari godaan belanja impulsif',
+            },
+            items: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  name: { type: Type.STRING, description: 'Nama bahan belanja' },
+                  quantity: { type: Type.STRING, description: 'Takaran belanja (misal: 1 kg, 2 papan, 3 ikat)' },
+                  estimatedPrice: { type: Type.NUMBER, description: 'Estimasi harga Rupiah riil Cimahi' },
+                  category: {
+                    type: Type.STRING,
+                    description: 'Protein & Lauk, Sayur & Bumbu Segar, Sembako & Pangan Pokok, Kebutuhan Esensial Rumah, Camilan Sehat & Buah',
+                  },
+                  recommendedPlace: {
+                    type: Type.STRING,
+                    description: 'Rekomendasi tempat beli di Cimahi (Pasar Atas, Borma, Jl. Haji Ghofur, Super Indo, dsb.)',
+                  },
+                  antiImpulsiveReason: {
+                    type: Type.STRING,
+                    description: 'Cara item ini mencegah belanja makanan/barang impulsif',
+                  },
+                  isEssential: { type: Type.BOOLEAN, description: 'Apakah kebutuhan prioritas utama' },
+                },
+                required: ['id', 'name', 'quantity', 'estimatedPrice', 'category', 'recommendedPlace', 'antiImpulsiveReason', 'isEssential'],
+              },
+            },
+          },
+          required: ['weeklyAllocation', 'totalEstimatedCost', 'periodName', 'cimahiMarketInsight', 'expertTip', 'items'],
+        },
+      },
+    });
+
+    const parsed = JSON.parse(response.text || '{}');
+    if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
+      return {
+        weeklyAllocation: parsed.weeklyAllocation || targetWeekly,
+        totalEstimatedCost: parsed.totalEstimatedCost || parsed.items.reduce((s: number, i: any) => s + (i.estimatedPrice || 0), 0),
+        remainingBudget: context.remainingBudget,
+        periodName: parsed.periodName || 'Menu Belanja 7 Hari Hemat Cimahi',
+        cimahiMarketInsight: parsed.cimahiMarketInsight || 'Harga komoditas sayuran hijau dan telur di pasar lokal Cimahi terpantau stabil.',
+        expertTip: parsed.expertTip || 'Bawalah catatan ini saat ke pasar dan hindari berbelanja dalam keadaan perut lapar untuk menjaga ketenangan dompet.',
+        items: parsed.items,
+      };
+    }
+    return getFallbackSmartShoppingList(context, targetWeekly);
+  } catch (err) {
+    console.error('Error generating Smart Shopping List with Gemini:', err);
+    return getFallbackSmartShoppingList(context, targetWeekly);
+  }
+}
+
+function getFallbackSmartShoppingList(context: FinancialContext, targetWeekly: number): SmartShoppingPlan {
+  const items: SmartShoppingItem[] = [
+    {
+      id: 'shop_1',
+      name: 'Telur Ayam Negeri Segar',
+      quantity: '1 kg (isi ~16 butir)',
+      estimatedPrice: 28000,
+      category: 'Protein & Lauk',
+      recommendedPlace: 'Pasar Atas Baru Cimahi / Warung Sembako Jl. Haji Ghofur',
+      antiImpulsiveReason: 'Protein serbaguna untuk sarapan dan lauk darurat kilat, mencegah pesan makanan via ojol saat lapar mendadak.',
+      isEssential: true,
+    },
+    {
+      id: 'shop_2',
+      name: 'Tempe & Tahu Putih Cibuntu',
+      quantity: '2 papan tempe + 1 bungkus tahu',
+      estimatedPrice: 12000,
+      category: 'Protein & Lauk',
+      recommendedPlace: 'Pengrajin Tahu Tempe Pasar Atas / Kios Cilame',
+      antiImpulsiveReason: 'Lauk kaya protein nabati dan serat, sangat mengenyangkan dengan modal terjangkau.',
+      isEssential: true,
+    },
+    {
+      id: 'shop_3',
+      name: 'Ikan Kembung Banjar Segar',
+      quantity: '500 gram (isi ~4-5 ekor)',
+      estimatedPrice: 22000,
+      category: 'Protein & Lauk',
+      recommendedPlace: 'Lapak Ikan Basah Pasar Atas Baru (pagi subuh)',
+      antiImpulsiveReason: 'Kaya omega-3 setara salmon dengan harga lokal terjangkau, sajian lezat keluarga tanpa perlu makan seafood di resto.',
+      isEssential: true,
+    },
+    {
+      id: 'shop_4',
+      name: 'Sayur Bayam, Kangkung & Jagung Manis',
+      quantity: '2 ikat bayam + 2 ikat kangkung + 2 jagung',
+      estimatedPrice: 15000,
+      category: 'Sayur & Bumbu Segar',
+      recommendedPlace: 'Pedagang Sayur Petani Cisarua di Jl. Haji Ghofur / PakuHaji',
+      antiImpulsiveReason: 'Sayuran segar harga kebun langsung memenuhi serat 4 hari, menjaga stamina dan daya tahan tubuh keluarga.',
+      isEssential: true,
+    },
+    {
+      id: 'shop_5',
+      name: 'Paket Bumbu Dapur Komplit (Bawang, Cabai, Tomat)',
+      quantity: 'Bawang merah 250g, bawang putih 250g, cabai merah keriting 150g',
+      estimatedPrice: 25000,
+      category: 'Sayur & Bumbu Segar',
+      recommendedPlace: 'Pasar Antri Baru / Pasar Kaget Cilame Permai',
+      antiImpulsiveReason: 'Kunci kelezatan masakan rumah; bumbu melimpah membuat hidangan rumahan terasa mewah seperti masakan resto.',
+      isEssential: true,
+    },
+    {
+      id: 'shop_6',
+      name: 'Beras Premium Setra Ramos / SPHP Bulog',
+      quantity: '5 kg',
+      estimatedPrice: 72500,
+      category: 'Sembako & Pangan Pokok',
+      recommendedPlace: 'Toko Beras Pasar Atas / Agen Sembako Borma Gandawijaya',
+      antiImpulsiveReason: 'Fondasi utama ketahanan pangan rumah tangga untuk jaminan kenyang seluruh anggota keluarga.',
+      isEssential: true,
+    },
+    {
+      id: 'shop_7',
+      name: 'Minyak Goreng Sawit Pouch Refill',
+      quantity: '1 pouch (2 Liter)',
+      estimatedPrice: 34000,
+      category: 'Sembako & Pangan Pokok',
+      recommendedPlace: 'Borma Gandawijaya / Borma Kerkof (Promo JSM)',
+      antiImpulsiveReason: 'Membeli pouch 2L di toserba jauh lebih hemat dibanding beli eceran botol kecil berulang di minimarket.',
+      isEssential: true,
+    },
+    {
+      id: 'shop_8',
+      name: 'Sabun Cuci Piring & Deterjen Refill Hemat',
+      quantity: '1 pouch besar (750 ml / 800 gr)',
+      estimatedPrice: 18000,
+      category: 'Kebutuhan Esensial Rumah',
+      recommendedPlace: 'Borma Toserba Cimahi (Lorong Houseware)',
+      antiImpulsiveReason: 'Kebutuhan sanitasi rumah tangga esensial, mencegah bolak-balik beli satuan yang mahal.',
+      isEssential: true,
+    },
+    {
+      id: 'shop_9',
+      name: 'Pisang Cavendish Lokal / Pepaya California',
+      quantity: '1 sisir pisang atau 1 buah pepaya utuh',
+      estimatedPrice: 16000,
+      category: 'Camilan Sehat & Buah',
+      recommendedPlace: 'Super Indo Sangkuriang (Diskon Buah Segar) / Kios Buah Cipageran',
+      antiImpulsiveReason: 'Camilan sehat manis alami untuk anak & pasangan, menekan keinginan beli jajanan boba, es krim atau snack pabrikan.',
+      isEssential: false,
+    },
+  ];
+
+  const total = items.reduce((sum, item) => sum + item.estimatedPrice, 0);
+
+  return {
+    weeklyAllocation: targetWeekly,
+    totalEstimatedCost: total,
+    remainingBudget: context.remainingBudget,
+    periodName: 'Rencana Belanja Cerdas 7 Hari Cimahi',
+    cimahiMarketInsight:
+      'Pasokan sayuran segar dari kawasan Cisarua dan Lembang ke jalur Haji Ghofur & Pasar Atas Cimahi sedang melimpah dengan harga sangat bersahabat. Promo sembako akhir pekan di Borma Toserba dan Super Indo Sangkuriang dapat dimanfaatkan untuk mengunci harga bahan pokok.',
+    items,
+    expertTip:
+      'Bawalah daftar ini dalam genggaman ponsel saat berbelanja. Berbelanjalah setelah sarapan agar tidak tergoda aroma jajanan, dan prioritaskan mencentang bahan pangan segar terlebih dahulu sebelum melirik barang lainnya.',
+  };
 }

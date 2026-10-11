@@ -33,6 +33,7 @@ import { AnalyticsDashboard } from './components/AnalyticsDashboard.tsx';
 import { GeminiAdvisorView } from './components/GeminiAdvisorView.tsx';
 import { CimahiBudgetChatbot } from './components/CimahiBudgetChatbot.tsx';
 import { DailySmartTipsSection } from './components/DailySmartTipsSection.tsx';
+import { SmartShoppingListSection } from './components/SmartShoppingListSection.tsx';
 import { SavingsGoalsSection } from './components/SavingsGoalsSection.tsx';
 import { GoogleSyncModal } from './components/GoogleSyncModal.tsx';
 import { CalendarReminderModal } from './components/CalendarReminderModal.tsx';
@@ -121,6 +122,12 @@ export default function App() {
   const [geminiMode, setGeminiMode] = useState<'chatbot' | 'audit'>('chatbot');
   const [chatbotPrefillPrompt, setChatbotPrefillPrompt] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [formInitialData, setFormInitialData] = useState<{
+    type?: 'income' | 'expense';
+    category?: string;
+    amount?: number;
+    description?: string;
+  } | null>(null);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
@@ -204,8 +211,11 @@ export default function App() {
     };
   }, [googleUser, showToast]);
 
-  // Initialize Firebase Auth for Google Workspace integration
+  // Initialize Firebase Auth for Google Workspace integration with diagnostic logging
   useEffect(() => {
+    // Run diagnostic check on mount to inspect window location vs Firebase authorized domain for Vercel
+    GoogleSheetsService.logAuthEnvironmentDiagnostics('Firebase Auth Initialization');
+
     const unsubscribe = initAuth(
       (user) => {
         setGoogleUser(user);
@@ -429,6 +439,7 @@ export default function App() {
       }
     } catch (err: any) {
       showToast(err.message || 'Gagal masuk dengan akun Google', 'warning');
+      throw err;
     }
   };
 
@@ -561,6 +572,19 @@ export default function App() {
                 setGeminiMode('chatbot');
                 setActiveTab('gemini');
               }}
+            />
+
+            {/* Smart Shopping List Powered by Gemini AI for Cimahi & KBB */}
+            <SmartShoppingListSection
+              config={budgetConfig}
+              dailyStatus={dailyStatus}
+              transactions={currentMonthTransactions}
+              remainingBudget={remainingBudget}
+              onOpenAddTransaction={(prefill) => {
+                setFormInitialData(prefill);
+                setIsAddModalOpen(true);
+              }}
+              onToast={(msg, type) => showToast(msg, type)}
             />
 
             {/* Savings Goals Powered by Unused Budget Surplus */}
@@ -746,9 +770,13 @@ export default function App() {
       {/* Modals and Drawers */}
       <TransactionFormModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setFormInitialData(null);
+        }}
         onSubmit={handleAddTransaction}
         dailyStatus={dailyStatus}
+        initialData={formInitialData}
       />
 
       <GoogleSyncModal

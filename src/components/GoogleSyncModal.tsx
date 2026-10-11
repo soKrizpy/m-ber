@@ -23,7 +23,7 @@ interface GoogleSyncModalProps {
   transactions: Transaction[];
   budgetConfig: BudgetConfig;
   googleUser: User | null;
-  onGoogleSignIn: () => void;
+  onGoogleSignIn: () => Promise<void> | void;
   onGoogleLogout: () => void;
   onSyncSuccess: (message: string) => void;
 }
@@ -144,11 +144,98 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({
           </button>
         </div>
 
-        {/* Error notification */}
+        {/* Error notification with troubleshooting guide */}
         {errorMessage && (
-          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start space-x-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
-            <span>{errorMessage}</span>
+          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex flex-col space-y-2">
+            <div className="flex items-start space-x-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
+              <span className="font-semibold leading-relaxed">{errorMessage}</span>
+            </div>
+            {(errorMessage.includes('Authorized Domains') ||
+              errorMessage.includes('unauthorized-domain') ||
+              errorMessage.includes('belum terdaftar')) && (
+              <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-rose-200 dark:border-rose-800 text-[11px] text-slate-700 dark:text-slate-200 space-y-2">
+                <p className="font-bold text-rose-700 dark:text-rose-400">
+                  🔧 Langkah Perbaikan Domain Vercel di Firebase:
+                </p>
+                <ol className="list-decimal list-inside space-y-1 text-slate-600 dark:text-slate-300">
+                  <li>
+                    Buka{' '}
+                    <a
+                      href="https://console.firebase.google.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline font-bold text-emerald-600 dark:text-emerald-400"
+                    >
+                      Firebase Console
+                    </a>
+                  </li>
+                  <li>
+                    Masuk ke menu <strong>Build</strong> &gt; <strong>Authentication</strong> &gt; <strong>Settings</strong> &gt; <strong>Authorized domains</strong>.
+                  </li>
+                  <li>
+                    Klik <strong>Add domain</strong>, lalu masukkan:{' '}
+                    <code className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono font-bold text-slate-900 dark:text-white">
+                      m-ber.vercel.app
+                    </code>{' '}
+                    dan{' '}
+                    <code className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono font-bold text-slate-900 dark:text-white">
+                      vercel.app
+                    </code>
+                  </li>
+                  <li>
+                    Simpan. Otorisasi login Google akan langsung aktif tanpa perlu build ulang.
+                  </li>
+                </ol>
+                <div className="pt-1 border-t border-rose-100 dark:border-rose-900/60 text-slate-500 dark:text-slate-400">
+                  💡 <strong>Alternatif Cepat:</strong> Klik tab <strong>"Google Apps Script"</strong> di atas. Metode Apps Script tidak memerlukan izin domain Firebase dan langsung aktif 100% di Vercel!
+                </div>
+              </div>
+            )}
+            {(errorMessage.includes('403') ||
+              errorMessage.includes('access_denied') ||
+              errorMessage.includes('Test Users') ||
+              errorMessage.includes('Testing') ||
+              errorMessage.includes('penguji')) && (
+              <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-amber-300 dark:border-amber-800 text-[11px] text-slate-700 dark:text-slate-200 space-y-2">
+                <p className="font-bold text-amber-700 dark:text-amber-400">
+                  ⚠️ Cara Mengatasi Error 403 (Status Testing Google OAuth):
+                </p>
+                <p className="text-slate-600 dark:text-slate-300">
+                  Aplikasi Google Cloud saat ini berada dalam mode <strong>Testing (Pengujian)</strong>. Anda dapat mengatasinya dengan 2 cara:
+                </p>
+                <div className="space-y-1.5 pl-2 border-l-2 border-amber-400 dark:border-amber-600">
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">
+                    Opsi 1: Tambahkan Email ke "Test Users" (Tercepat):
+                  </p>
+                  <ol className="list-decimal list-inside space-y-0.5 text-slate-600 dark:text-slate-300">
+                    <li>
+                      Buka{' '}
+                      <a
+                        href="https://console.cloud.google.com/apis/credentials/consent?project=gen-lang-client-0025417287"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline font-bold text-emerald-600 dark:text-emerald-400"
+                      >
+                        Google Cloud OAuth Consent Screen
+                      </a>
+                    </li>
+                    <li>Gulir ke bagian <strong>Test users (Pengguna uji)</strong> lalu klik <strong>+ ADD USERS</strong>.</li>
+                    <li>Masukkan email Anda (misal: <code>maktabahsyam@gmail.com</code>) lalu klik <strong>Save</strong>.</li>
+                  </ol>
+
+                  <p className="font-semibold text-slate-800 dark:text-slate-200 pt-1">
+                    Opsi 2: Publikasikan Aplikasi (Publish App):
+                  </p>
+                  <p className="text-slate-600 dark:text-slate-300">
+                    Di halaman consent screen di atas, klik tombol <strong>PUBLISH APP</strong> (Publikasikan Aplikasi) agar semua akun Google dapat login tanpa dibatasi daftar penguji.
+                  </p>
+                </div>
+                <div className="pt-1 border-t border-amber-200 dark:border-amber-900/60 text-slate-500 dark:text-slate-400">
+                  💡 <strong>Atau gunakan tab Google Apps Script</strong> di atas yang tidak memerlukan verifikasi OAuth sama sekali.
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -173,8 +260,15 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({
               {!googleUser ? (
                 <div>
                   <button
-                    onClick={onGoogleSignIn}
-                    className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl font-bold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white hover:bg-slate-50 transition shadow-xs"
+                    onClick={async () => {
+                      setErrorMessage(null);
+                      try {
+                        await onGoogleSignIn();
+                      } catch (err: any) {
+                        setErrorMessage(err.message || 'Gagal masuk dengan Google.');
+                      }
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl font-bold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white hover:bg-slate-50 transition shadow-xs cursor-pointer"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
                       <path

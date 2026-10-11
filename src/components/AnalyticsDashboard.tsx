@@ -358,8 +358,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               regressionData.isOverBudgetProjected ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
             }`}>
               {regressionData.isOverBudgetProjected
-                ? `Defisit Rp ${Math.abs(regressionData.budgetVariance).toLocaleString('id-ID')}`
-                : `Sisa Hemat Rp ${regressionData.budgetVariance.toLocaleString('id-ID')}`}
+                ? `Penyesuaian Rp ${Math.abs(regressionData.budgetVariance).toLocaleString('id-ID')}`
+                : `Potensi Tabungan Rp ${regressionData.budgetVariance.toLocaleString('id-ID')}`}
             </p>
           </div>
 
@@ -623,18 +623,18 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               )}
               <span>
                 {regressionData.isOverBudgetProjected
-                  ? 'Peringatan Tren Linier: Pengeluaran Diprediksi Melebihi Anggaran!'
-                  : 'Tren Linier Terkendali: Pengeluaran Diprediksi Mencukupi 30 Hari!'}
+                  ? 'Insight Harmoni Finansial: Potensi Penyesuaian Ritme Belanja Keluarga'
+                  : 'Insight Harmoni Finansial: Arus Kas Keluarga Berjalan Rapi & Kondusif'}
               </span>
             </div>
 
             <p className="text-[11px] leading-relaxed">
-              Berdasarkan pola regresi linier saat ini, laju belanja harian Anda berjalan di angka{' '}
-              <strong>Rp {regressionData.slope.toLocaleString('id-ID')}/hari</strong>. Jika ritme ini tidak disesuaikan, total pengeluaran di akhir bulan (hari ke-30) diproyeksikan mencapai{' '}
+              Berdasarkan pola pencatatan saat ini, rata-rata kebutuhan harian keluarga berjalan di angka{' '}
+              <strong>Rp {regressionData.slope.toLocaleString('id-ID')}/hari</strong>. Dengan ritme ini, estimasi total belanja di akhir bulan (hari ke-30) diproyeksikan berada di kisaran{' '}
               <strong>Rp {regressionData.projectedEndTotal.toLocaleString('id-ID')}</strong> (
               {regressionData.isOverBudgetProjected
-                ? `melewati batas anggaran sebesar Rp ${Math.abs(regressionData.budgetVariance).toLocaleString('id-ID')}`
-                : `tersisa surplus hemat sebesar Rp ${regressionData.budgetVariance.toLocaleString('id-ID')}`}
+                ? `sedikit melampaui estimasi awal sebesar Rp ${Math.abs(regressionData.budgetVariance).toLocaleString('id-ID')}`
+                : `berpeluang menyisakan surplus tabungan sebesar Rp ${regressionData.budgetVariance.toLocaleString('id-ID')}`}
               ).
             </p>
 
@@ -642,9 +642,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <div className="pt-1 border-t border-rose-200/60 dark:border-rose-900/40 flex items-center space-x-1.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
                 <ArrowRight className="w-3.5 h-3.5 shrink-0" />
                 <span>
-                  Saran Penyesuaian: Tekan belanja harian Anda sebesar Rp{' '}
-                  {(regressionData.slope - regressionData.targetBurnRate).toLocaleString('id-ID')}/hari (maksimal Rp{' '}
-                  {regressionData.targetBurnRate.toLocaleString('id-ID')}/hari) agar anggaran cukup sampai hari ke-30.
+                  Rekomendasi Nyaman: Mengatur ritme belanja harian santai di kisaran Rp{' '}
+                  {regressionData.targetBurnRate.toLocaleString('id-ID')}/hari akan menjaga ketenteraman keuangan keluarga tetap seimbang hingga akhir bulan.
                 </span>
               </div>
             )}
