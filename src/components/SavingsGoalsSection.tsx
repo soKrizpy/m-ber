@@ -14,6 +14,8 @@ import {
   AlertCircle,
   X,
   Compass,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { SavingsGoal } from '../types/finance.ts';
 
@@ -47,6 +49,7 @@ export const SavingsGoalsSection: React.FC<SavingsGoalsSectionProps> = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null);
+  const [isExpanded, setIsExpanded] = useState<boolean>(savingsGoals.length > 0);
 
   // Form State
   const [formTitle, setFormTitle] = useState('');
@@ -205,10 +208,21 @@ export const SavingsGoalsSection: React.FC<SavingsGoalsSectionProps> = ({
             <Plus className="w-4 h-4" />
             <span>Tambah Target</span>
           </button>
+
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="p-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
+            title={isExpanded ? 'Sembunyikan Target Tabungan' : 'Tampilkan Target Tabungan'}
+            aria-label={isExpanded ? 'Sembunyikan Target Tabungan' : 'Tampilkan Target Tabungan'}
+          >
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
         </div>
       </div>
 
-      {/* Surplus Explanation Banner */}
+      {isExpanded && (
+        <>
+          {/* Surplus Explanation Banner */}
       <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-50/70 via-teal-50/50 to-cyan-50/70 dark:from-emerald-950/20 dark:via-teal-950/15 dark:to-cyan-950/20 border border-emerald-100 dark:border-emerald-900/40 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-2.5">
           <div className="w-7 h-7 rounded-xl bg-emerald-500/10 dark:bg-emerald-400/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -459,6 +473,8 @@ export const SavingsGoalsSection: React.FC<SavingsGoalsSectionProps> = ({
             );
           })}
         </div>
+      )}
+        </>
       )}
 
       {/* MODAL: Tambah / Edit Target Tabungan */}

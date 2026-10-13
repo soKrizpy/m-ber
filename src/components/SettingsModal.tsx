@@ -19,6 +19,7 @@ import {
   Monitor,
   RotateCcw,
   Download,
+  Calendar,
 } from 'lucide-react';
 import {
   BudgetConfig,
@@ -66,6 +67,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [selectedArea, setSelectedArea] = useState(
     config.cityContext || 'Cimahi & KBB (Haji Ghofur, PakuHaji, Desa Cilame, Ngamprah, Cipageran)'
   );
+  const [autoMonthlyReset, setAutoMonthlyReset] = useState<boolean>(config.autoMonthlyReset !== false);
+  const [resetFeedbackMsg, setResetFeedbackMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -116,8 +119,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       autoDailyLimit: autoDaily,
       customDailyLimit: parsedCustom,
       cityContext: selectedArea,
+      autoMonthlyReset,
     });
     onClose();
+  };
+
+  const handleSimulateNextMonthReset = () => {
+    const res = FinanceDB.simulateMonthlyReset();
+    setResetFeedbackMsg(`Berhasil! Siklus telah di-reset ke periode ${res.newMonth}. Pengeluaran baru dimulai dari Rp 0.`);
+    setTimeout(() => setResetFeedbackMsg(null), 5000);
+  };
+
+  const handleResetCurrentMonthToZero = () => {
+    const confirmed = window.confirm('Reset seluruh transaksi bulan ini ke Rp 0? Riwayat belanja bulan ini akan dikosongkan.');
+    if (confirmed) {
+      const count = FinanceDB.resetCurrentMonthTransactionsToZero();
+      setResetFeedbackMsg(`Sukses! ${count} transaksi bulan ini telah di-reset ke Rp 0.`);
+      setTimeout(() => setResetFeedbackMsg(null), 5000);
+    }
   };
 
   return (
@@ -388,6 +407,98 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 ) : (
                   <ToggleLeft className="w-6 h-6 text-slate-400" />
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2.5: Auto Reset on 1st of Each Month */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3 text-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                Siklus Anggaran & Reset Otomatis Tanggal 1
+              </h3>
+            </div>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                autoMonthlyReset
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                  : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+              }`}
+            >
+              {autoMonthlyReset ? 'Aktif' : 'Nonaktif'}
+            </span>
+          </div>
+
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            Secara otomatis mereset siklus anggaran dan pengeluaran setiap tanggal 1 tiap bulan. Pengeluaran bulan baru dimulai bersih dari Rp 0, sementara data bulan sebelumnya tetap tersimpan di riwayat.
+          </p>
+
+          {/* Toggle Control Card */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+            <div>
+              <p className="font-semibold text-slate-900 dark:text-white">
+                Reset Otomatis Setiap Tanggal 1
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Setiap pergantian bulan (tanggal 1 pukul 00:00 WIB), pengeluaran aktif kembali ke Rp 0.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAutoMonthlyReset(!autoMonthlyReset)}
+              className="p-1 rounded-lg cursor-pointer"
+              title={autoMonthlyReset ? 'Nonaktifkan reset tanggal 1' : 'Aktifkan reset tanggal 1'}
+            >
+              {autoMonthlyReset ? (
+                <ToggleRight className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <ToggleLeft className="w-7 h-7 text-slate-400" />
+              )}
+            </button>
+          </div>
+
+          {/* Current Period Info & Simulation Actions */}
+          <div className="p-3 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/50 space-y-2.5">
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div>
+                <span className="text-slate-500 dark:text-slate-400">Periode Aktif:</span>
+                <p className="font-bold text-slate-900 dark:text-white">{config.month || 'Bulan Ini'}</p>
+              </div>
+              <div>
+                <span className="text-slate-500 dark:text-slate-400">Jadwal Reset Berikutnya:</span>
+                <p className="font-bold text-emerald-700 dark:text-emerald-400">Tanggal 1 Bulan Depan</p>
+              </div>
+            </div>
+
+            {resetFeedbackMsg && (
+              <div className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 font-semibold text-[11px] flex items-center gap-1.5 animate-in fade-in">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span>{resetFeedbackMsg}</span>
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-emerald-200/50 dark:border-emerald-900/40">
+              <button
+                type="button"
+                onClick={handleSimulateNextMonthReset}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                title="Simulasikan pergantian ke tanggal 1 bulan berikutnya"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                Simulasikan Reset Tanggal 1 Bulan Depan
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetCurrentMonthToZero}
+                className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-[11px] flex items-center gap-1.5 transition cursor-pointer"
+                title="Kosongkan belanja bulan ini kembali ke 0"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                Reset Belanja Bulan Ini ke Rp 0
               </button>
             </div>
           </div>

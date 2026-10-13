@@ -169,42 +169,26 @@ export const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({
             </div>
           </div>
 
-          {/* Quick Action Buttons Row */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 pt-2 border-t border-white/10">
+          {/* Quick Action Buttons Row - Streamlined & Focused */}
+          <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-white/10">
             <button
               onClick={onOpenAddModal}
-              className="col-span-2 sm:col-span-1 inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition active:scale-95 shadow-md shadow-emerald-500/20"
+              className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition active:scale-95 shadow-md shadow-emerald-500/20 cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Catat Transaksi Baru</span>
             </button>
 
-            <button
-              onClick={onOpenAdvisor}
-              className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-teal-500 to-emerald-600 hover:opacity-90 text-white transition active:scale-95 shadow-md shadow-teal-500/20"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Tanya Kang Tambal</span>
-            </button>
-
-            <button
-              onClick={onOpenExportModal}
-              className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium bg-white/10 hover:bg-white/20 text-white transition active:scale-95"
-            >
-              <FileDown className="w-4 h-4" />
-              <span>Laporan PDF</span>
-            </button>
-
             {onOpenRecapModal && (
               <button
                 onClick={onOpenRecapModal}
-                className="col-span-2 sm:col-span-1 inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 transition active:scale-95 shadow-md shadow-amber-400/20 cursor-pointer"
-                title="Buka Rekapitulasi, Prestasi & Evaluasi Akhir Bulan"
+                className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-white/10 hover:bg-white/20 text-white transition active:scale-95 cursor-pointer"
+                title="Buka Rekapitulasi Akhir Bulan"
               >
-                <Award className="w-4 h-4 text-slate-950" />
-                <span>Rekap Akhir Bulan</span>
+                <Award className="w-4 h-4 text-amber-400" />
+                <span>Rekap Bulanan</span>
                 {dailyStatus.remainingDays <= 5 && (
-                  <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
                 )}
               </button>
             )}

@@ -8,8 +8,8 @@ import {
 } from 'lucide-react';
 
 interface BottomNavbarProps {
-  activeTab: 'overview' | 'transactions' | 'analytics' | 'achievements' | 'gemini';
-  onChangeTab: (tab: 'overview' | 'transactions' | 'analytics' | 'achievements' | 'gemini') => void;
+  activeTab: 'overview' | 'transactions' | 'analytics' | 'gemini';
+  onChangeTab: (tab: 'overview' | 'transactions' | 'analytics' | 'gemini') => void;
   transactionCount?: number;
 }
 
@@ -28,7 +28,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
     },
     {
       id: 'transactions' as const,
-      label: 'Catatan Transaksi',
+      label: 'Transaksi',
       shortLabel: 'Transaksi',
       icon: Receipt,
       badge: transactionCount > 0 ? transactionCount : null,
@@ -36,23 +36,16 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
     {
       id: 'analytics' as const,
       label: 'Analitik & PDF',
-      shortLabel: 'Analitik',
+      shortLabel: 'Laporan',
       icon: BarChart3,
       badge: null,
     },
     {
-      id: 'achievements' as const,
-      label: 'Prestasi',
-      shortLabel: 'Prestasi',
-      icon: Award,
-      badge: null,
-    },
-    {
       id: 'gemini' as const,
-      label: 'Kang Tambal',
-      shortLabel: 'Kang Tambal',
+      label: 'Kang Tambal AI',
+      shortLabel: 'Asisten AI',
       icon: Sparkles,
-      badge: 'AI',
+      badge: null,
       isAi: true,
     },
   ];

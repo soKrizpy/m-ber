@@ -29,7 +29,6 @@ interface EndOfMonthRecapModalProps {
   remainingBudget: number;
   categories: CategorySummary[];
   onOpenAdvisor?: () => void;
-  onOpenAchievements?: () => void;
   onUpdateConfig?: (newCfg: BudgetConfig) => void;
   onToast: (msg: string, type?: 'success' | 'warning' | 'info') => void;
 }
@@ -44,7 +43,6 @@ export const EndOfMonthRecapModal: React.FC<EndOfMonthRecapModalProps> = ({
   totalExpense,
   remainingBudget,
   categories,
-  onOpenAchievements,
   onToast,
 }) => {
   const [isExportingPNG, setIsExportingPNG] = useState(false);
@@ -304,38 +302,7 @@ _M-Ber Family Financial Planner: Menjaga Ketenteraman Rumah Tangga_`;
             </div>
           </div>
 
-          {/* 3. Link to Full Achievements Page */}
-          {onOpenAchievements && (
-            <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/60 flex items-center justify-between gap-3">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
-                  🏆
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">
-                    {unlockedCount} Medali Prestasi Terbuka
-                  </p>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                    Lihat detail lencana dan syarat pencapaian di halaman khusus Prestasi.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onOpenAchievements();
-                }}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 transition flex items-center space-x-1 shrink-0 cursor-pointer shadow-xs"
-              >
-                <span>Buka Prestasi</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* 4. Action Banner to Export Report */}
+          {/* 3. Action Banner to Export Report */}
           <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h4 className="text-xs sm:text-sm font-bold text-emerald-950 dark:text-emerald-200 flex items-center space-x-1.5">

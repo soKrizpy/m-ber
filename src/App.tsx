@@ -40,7 +40,7 @@ import { CalendarReminderModal } from './components/CalendarReminderModal.tsx';
 import { NotificationDrawer } from './components/NotificationDrawer.tsx';
 import { SettingsModal } from './components/SettingsModal.tsx';
 import { EndOfMonthRecapModal } from './components/EndOfMonthRecapModal.tsx';
-import { AchievementsView } from './components/AchievementsView.tsx';
+import { FirstTimeOnboardingModal } from './components/FirstTimeOnboardingModal.tsx';
 import { User } from 'firebase/auth';
 
 export default function App() {
@@ -118,8 +118,8 @@ export default function App() {
   const [googleUser, setGoogleUser] = useState<User | null>(null);
 
   // Active view tab & modals
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'analytics' | 'achievements' | 'gemini'>('overview');
-  const [geminiMode, setGeminiMode] = useState<'chatbot' | 'audit'>('chatbot');
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'analytics' | 'gemini'>('overview');
+  const [geminiMode, setGeminiMode] = useState<'chatbot' | 'tips' | 'shopping' | 'audit'>('chatbot');
   const [chatbotPrefillPrompt, setChatbotPrefillPrompt] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [formInitialData, setFormInitialData] = useState<{
@@ -133,6 +133,14 @@ export default function App() {
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isRecapModalOpen, setIsRecapModalOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
+    try {
+      const done = localStorage.getItem('mber_first_time_onboarding_done');
+      return !done;
+    } catch {
+      return false;
+    }
+  });
   const [toastMessage, setToastMessage] = useState<{ title: string; type: 'success' | 'warning' | 'info' } | null>(null);
 
   const showToast = useCallback((title: string, type: 'success' | 'warning' | 'info' = 'success') => {
@@ -141,6 +149,39 @@ export default function App() {
       setToastMessage(null);
     }, 4000);
   }, []);
+
+  const handleCompleteOnboarding = (monthlyBudget: number) => {
+    const currentCfg = FinanceDB.getBudgetConfig();
+    const updatedCfg = {
+      ...currentCfg,
+      monthlyBudget,
+    };
+    FinanceDB.saveBudgetConfig(updatedCfg);
+    setBudgetConfig(updatedCfg);
+    try {
+      localStorage.setItem('mber_first_time_onboarding_done', 'true');
+    } catch {
+      // ignore
+    }
+    setIsOnboardingOpen(false);
+    showToast(
+      `Selamat datang di M-Ber! Uang bulanan masuk Rp ${monthlyBudget.toLocaleString('id-ID')} berhasil disetel.`,
+      'success'
+    );
+  };
+
+  const handleSkipOnboarding = () => {
+    try {
+      localStorage.setItem('mber_first_time_onboarding_done', 'true');
+    } catch {
+      // ignore
+    }
+    setIsOnboardingOpen(false);
+    showToast(
+      'Form onboarding dilewati. Data tersimpan secara offline di perangkat ini (tidak tersimpan ke Google Sheets).',
+      'info'
+    );
+  };
 
   // Listen to DB and Storage events
   useEffect(() => {
@@ -228,6 +269,57 @@ export default function App() {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
   }, []);
+
+  // Check and execute automatic reset on the 1st of each month (or when month changes)
+  useEffect(() => {
+    const runMonthlyResetCheck = () => {
+      const res = FinanceDB.checkAndPerformMonthlyAutoReset();
+      if (res.hasReset) {
+        setBudgetConfig(FinanceDB.getBudgetConfig());
+        setTransactions(FinanceDB.getTransactions());
+        showToast(
+          `🗓️ Periode Baru ${res.newMonth}: Anggaran M-Ber telah otomatis di-reset untuk tanggal 1. Pengeluaran dimulai dari Rp 0!`,
+          'info'
+        );
+        NotificationService.push(
+          '🗓️ Siklus Anggaran Baru (Tanggal 1)',
+          `Selamat datang di periode ${res.newMonth}! Sesuai pengaturan M-Ber, pencatatan belanja bulan ini otomatis di-reset ke Rp 0. Arsip bulan sebelumnya tetap tersimpan di riwayat.`,
+          'info'
+        );
+      }
+    };
+
+    // 1. Check immediately upon mount
+    runMonthlyResetCheck();
+
+    // 2. Listen to custom simulation / manual monthly reset events
+    const handleMonthlyResetEvent = (e: Event) => {
+      const customEvt = e as CustomEvent;
+      const detail = customEvt.detail || {};
+      setBudgetConfig(FinanceDB.getBudgetConfig());
+      setTransactions(FinanceDB.getTransactions());
+      showToast(
+        `🗓️ Periode ${detail.newMonth || ''}: Siklus anggaran berhasil di-reset untuk tanggal 1. Pengeluaran dimulai dari Rp 0!`,
+        'success'
+      );
+    };
+    window.addEventListener('finance_monthly_reset_occurred', handleMonthlyResetEvent);
+
+    // 3. Periodic check every 60 seconds & on tab visibility change
+    const interval = setInterval(runMonthlyResetCheck, 60000);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        runMonthlyResetCheck();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('finance_monthly_reset_occurred', handleMonthlyResetEvent);
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [showToast]);
 
   // Filter current month transactions
   const currentMonthTransactions = useMemo(() => {
@@ -516,35 +608,9 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* VIEW 1: Overview (Default) */}
+        {/* VIEW 1: Overview (Default - Streamlined & Focused) */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* End of Month Prompt Callout Banner */}
-            {isEndOfMonth && (
-              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg animate-in fade-in">
-                <div className="flex items-center space-x-3.5">
-                  <div className="w-11 h-11 rounded-2xl bg-white/25 flex items-center justify-center font-black text-slate-950 shrink-0 shadow-xs">
-                    <Award className="w-6 h-6 text-slate-950" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm sm:text-base tracking-tight">
-                      🗓️ Penghujung Bulan Tiba! Waktunya Rekap Evaluasi Keuangan
-                    </h3>
-                    <p className="text-xs text-slate-950/90 font-medium">
-                      Sisa {dailyStatus.remainingDays} hari. Rekap pengeluaran, klaim medali prestasimu, dan unduh infografis metrik (PNG/PDF).
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsRecapModalOpen(true)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-black bg-slate-950 text-white hover:bg-slate-900 transition flex items-center justify-center space-x-2 shrink-0 shadow-md cursor-pointer active:scale-95"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Buka Rekap Bulanan Sekarang</span>
-                </button>
-              </div>
-            )}
-
             <BudgetOverviewCard
               config={budgetConfig}
               onUpdateConfig={(newCfg) => {
@@ -561,31 +627,14 @@ export default function App() {
               onOpenRecapModal={() => setIsRecapModalOpen(true)}
             />
 
-            {/* Daily AI-Generated Smart Spending Tips for Cimahi */}
-            <DailySmartTipsSection
-              config={budgetConfig}
-              dailyStatus={dailyStatus}
-              transactions={currentMonthTransactions}
-              remainingBudget={remainingBudget}
-              onAskChatbotWithTip={(tipText) => {
-                setChatbotPrefillPrompt(tipText);
-                setGeminiMode('chatbot');
-                setActiveTab('gemini');
-              }}
-            />
-
-            {/* Smart Shopping List Powered by Gemini AI for Cimahi & KBB */}
-            <SmartShoppingListSection
-              config={budgetConfig}
-              dailyStatus={dailyStatus}
-              transactions={currentMonthTransactions}
-              remainingBudget={remainingBudget}
-              onOpenAddTransaction={(prefill) => {
-                setFormInitialData(prefill);
-                setIsAddModalOpen(true);
-              }}
-              onToast={(msg, type) => showToast(msg, type)}
-            />
+            {/* Recent Transactions List */}
+            <div className="space-y-3">
+              <TransactionList
+                transactions={transactions.slice(0, 8)}
+                onDeleteTransaction={handleDeleteTransaction}
+                onOpenAddModal={() => setIsAddModalOpen(true)}
+              />
+            </div>
 
             {/* Savings Goals Powered by Unused Budget Surplus */}
             <SavingsGoalsSection
@@ -596,79 +645,6 @@ export default function App() {
               unusedBudgetSurplus={remainingBudget}
               monthlyBudget={budgetConfig.monthlyBudget}
             />
-
-            {/* Quick Preview of Recent Transactions & AI Teaser */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-8">
-                <TransactionList
-                  transactions={transactions.slice(0, 8)}
-                  onDeleteTransaction={handleDeleteTransaction}
-                  onOpenAddModal={() => setIsAddModalOpen(true)}
-                />
-              </div>
-
-              {/* Cimahi AI Advisor Widget Quickbox */}
-              <div className="lg:col-span-4 space-y-4">
-                <div className="p-5 rounded-3xl bg-gradient-to-br from-teal-900/90 to-emerald-950 text-white border border-teal-800/40 shadow-sm space-y-4">
-                  <div className="flex items-center space-x-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold">
-                      <Sparkles className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold">Konsultasi Anggaran Cimahi & KBB</h3>
-                      <p className="text-[11px] text-teal-200">Didukung Gemini AI</p>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-slate-200 leading-relaxed">
-                    Sisa waktu bulan ini <strong>{dailyStatus.remainingDays} hari</strong>. Ingin rekomendasi belanja bahan pangan murah di Pasar Atas / Jl. Haji Ghofur atau promo diskon Borma & supermarket Cilame - Cipageran?
-                  </p>
-
-                  <button
-                    onClick={() => setActiveTab('gemini')}
-                    className="w-full py-2.5 rounded-xl text-xs font-bold bg-white text-emerald-950 hover:bg-emerald-50 transition shadow-sm flex items-center justify-center space-x-1.5"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Tanya Kang Tambal Sekarang</span>
-                  </button>
-                </div>
-
-                {/* Google Sync Status Widget */}
-                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                        Status Google Sheets
-                      </h4>
-                    </div>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        syncStatus.sheetsSpreadsheetId
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                      }`}
-                    >
-                      {syncStatus.sheetsSpreadsheetId ? 'Terkoneksi' : 'Lokal Saja'}
-                    </span>
-                  </div>
-
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {syncStatus.pendingCount > 0
-                      ? `Ada ${syncStatus.pendingCount} transaksi dalam antrean sinkronisasi.`
-                      : 'Seluruh data tersinkron rapi di Google Sheets.'}
-                  </p>
-
-                  <button
-                    onClick={() => setIsSyncModalOpen(true)}
-                    className="w-full py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center justify-center space-x-1.5"
-                  >
-                    <CloudUpload className="w-3.5 h-3.5" />
-                    <span>Kelola Sinkronisasi Sheets</span>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -695,52 +671,61 @@ export default function App() {
           />
         )}
 
-        {/* VIEW 4: Prestasi & Pencapaian Finansial (Achievements Page) */}
-        {activeTab === 'achievements' && (
-          <AchievementsView
-            config={budgetConfig}
-            transactions={currentMonthTransactions}
-            dailyStatus={dailyStatus}
-            totalIncome={totalIncome}
-            totalExpense={totalExpense}
-            remainingBudget={remainingBudget}
-            categories={categoriesSummary}
-            onOpenRecapModal={() => setIsRecapModalOpen(true)}
-            onNavigateTab={setActiveTab}
-          />
-        )}
-
-        {/* VIEW 5: Gemini Advisor (Kang Tambal - Chatbot & Audit) */}
+        {/* VIEW 4: Kang Tambal AI Suite (Chatbot, Daily Tips, Smart Shopping List & Audit) */}
         {activeTab === 'gemini' && (
           <div className="space-y-4">
-            {/* Mode Switcher Pills */}
+            {/* Mode Switcher Navigation Pills */}
             <div className="flex items-center justify-center">
-              <div className="inline-flex p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+              <div className="inline-flex p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 max-w-full overflow-x-auto">
                 <button
                   onClick={() => setGeminiMode('chatbot')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
                     geminiMode === 'chatbot'
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Chatbot Interaktif Cimahi</span>
+                  <span>Chatbot Asisten</span>
                 </button>
+
+                <button
+                  onClick={() => setGeminiMode('tips')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
+                    geminiMode === 'tips'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span>Tips Harian</span>
+                </button>
+
+                <button
+                  onClick={() => setGeminiMode('shopping')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
+                    geminiMode === 'shopping'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span>Daftar Belanja 7 Hari</span>
+                </button>
+
                 <button
                   onClick={() => setGeminiMode('audit')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
                     geminiMode === 'audit'
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <span>Audit & Rekomendasi 30 Hari</span>
+                  <span>Audit Anggaran</span>
                 </button>
               </div>
             </div>
 
-            {geminiMode === 'chatbot' ? (
+            {/* Sub-view Content */}
+            {geminiMode === 'chatbot' && (
               <CimahiBudgetChatbot
                 config={budgetConfig}
                 transactions={currentMonthTransactions}
@@ -752,7 +737,36 @@ export default function App() {
                 initialPrompt={chatbotPrefillPrompt}
                 onClearInitialPrompt={() => setChatbotPrefillPrompt(null)}
               />
-            ) : (
+            )}
+
+            {geminiMode === 'tips' && (
+              <DailySmartTipsSection
+                config={budgetConfig}
+                dailyStatus={dailyStatus}
+                transactions={currentMonthTransactions}
+                remainingBudget={remainingBudget}
+                onAskChatbotWithTip={(tipText) => {
+                  setChatbotPrefillPrompt(tipText);
+                  setGeminiMode('chatbot');
+                }}
+              />
+            )}
+
+            {geminiMode === 'shopping' && (
+              <SmartShoppingListSection
+                config={budgetConfig}
+                dailyStatus={dailyStatus}
+                transactions={currentMonthTransactions}
+                remainingBudget={remainingBudget}
+                onOpenAddTransaction={(prefill) => {
+                  setFormInitialData(prefill);
+                  setIsAddModalOpen(true);
+                }}
+                onToast={(msg, type) => showToast(msg, type)}
+              />
+            )}
+
+            {geminiMode === 'audit' && (
               <GeminiAdvisorView
                 config={budgetConfig}
                 transactions={currentMonthTransactions}
@@ -854,14 +868,21 @@ export default function App() {
         onOpenAdvisor={() => {
           setActiveTab('gemini');
         }}
-        onOpenAchievements={() => {
-          setActiveTab('achievements');
-        }}
         onUpdateConfig={(newCfg) => {
           FinanceDB.saveBudgetConfig(newCfg);
           showToast('Target anggaran bulan baru berhasil disimpan!', 'success');
         }}
         onToast={showToast}
+      />
+
+      {/* First Time User Onboarding Modal (Uang Bulanan Masuk & Google Account Sync) */}
+      <FirstTimeOnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        onSubmit={handleCompleteOnboarding}
+        onSkip={handleSkipOnboarding}
+        googleUser={googleUser}
+        onGoogleSignIn={handleGoogleSignIn}
       />
     </div>
   );

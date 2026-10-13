@@ -24,6 +24,8 @@ const DEFAULT_CONFIG: BudgetConfig = {
   autoDailyLimit: true,
   customDailyLimit: 0,
   cityContext: 'Kota Cimahi & KBB (Haji Ghofur, PakuHaji, Desa Cilame, Kec. Ngamprah, Cipageran)',
+  autoMonthlyReset: true,
+  lastAutoResetAt: new Date().toISOString(),
 };
 
 const DEFAULT_SYNC: SyncStatus = {
@@ -245,6 +247,90 @@ export class FinanceDB {
     window.dispatchEvent(new Event('finance_config_updated'));
     window.dispatchEvent(new Event('finance_savings_updated'));
     window.dispatchEvent(new Event('finance_sync_updated'));
+  }
+
+  /**
+   * Checks if today is the 1st of a new month (or if the active budget month has changed)
+   * and automatically resets the active monthly cycle to 0 expenses for the new month.
+   */
+  static checkAndPerformMonthlyAutoReset(): { hasReset: boolean; oldMonth: string; newMonth: string } {
+    if (typeof window === 'undefined') return { hasReset: false, oldMonth: '', newMonth: '' };
+    const config = this.getBudgetConfig();
+    const currentMonth = getCurrentMonthStr();
+
+    // Auto reset is enabled by default unless user explicitly turned it off
+    const isAutoResetEnabled = config.autoMonthlyReset !== false;
+
+    if (isAutoResetEnabled && config.month && config.month !== currentMonth) {
+      const oldMonth = config.month;
+      const updatedConfig: BudgetConfig = {
+        ...config,
+        month: currentMonth,
+        customDailyLimit: 0,
+        lastAutoResetAt: new Date().toISOString(),
+      };
+      this.saveBudgetConfig(updatedConfig);
+
+      // Dispatch event for UI notifications
+      window.dispatchEvent(
+        new CustomEvent('finance_monthly_reset_occurred', {
+          detail: { oldMonth, newMonth: currentMonth, source: 'auto_1st_of_month' },
+        })
+      );
+      window.dispatchEvent(new Event('finance_db_updated'));
+
+      return { hasReset: true, oldMonth, newMonth: currentMonth };
+    }
+
+    return { hasReset: false, oldMonth: config.month, newMonth: currentMonth };
+  }
+
+  /**
+   * Simulates or executes an immediate reset to a target month (or next month)
+   * so users can test and verify the 1st of month auto-reset feature anytime.
+   */
+  static simulateMonthlyReset(targetMonth?: string): { oldMonth: string; newMonth: string } {
+    const config = this.getBudgetConfig();
+    const oldMonth = config.month || getCurrentMonthStr();
+
+    let nextMonth = targetMonth;
+    if (!nextMonth) {
+      const [yearStr, monthStr] = oldMonth.split('-');
+      const y = parseInt(yearStr, 10);
+      const m = parseInt(monthStr, 10);
+      const nextDate = new Date(y, m, 1); // 1st of next month
+      nextMonth = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    const updatedConfig: BudgetConfig = {
+      ...config,
+      month: nextMonth,
+      customDailyLimit: 0,
+      lastAutoResetAt: new Date().toISOString(),
+    };
+    this.saveBudgetConfig(updatedConfig);
+
+    window.dispatchEvent(
+      new CustomEvent('finance_monthly_reset_occurred', {
+        detail: { oldMonth, newMonth: nextMonth, source: 'manual_simulation' },
+      })
+    );
+    window.dispatchEvent(new Event('finance_db_updated'));
+
+    return { oldMonth, newMonth: nextMonth };
+  }
+
+  /**
+   * Resets active transactions in the current month back to Rp 0
+   */
+  static resetCurrentMonthTransactionsToZero(): number {
+    const config = this.getBudgetConfig();
+    const currentPrefix = config.month || getCurrentMonthStr();
+    const all = this.getTransactions();
+    const remaining = all.filter((t) => !t.date.startsWith(currentPrefix));
+    const deletedCount = all.length - remaining.length;
+    this.saveTransactions(remaining);
+    return deletedCount;
   }
 
   static addSavingsGoal(goal: Omit<SavingsGoal, 'id' | 'createdAt' | 'updatedAt'>): SavingsGoal {

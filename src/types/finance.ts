@@ -24,6 +24,8 @@ export interface BudgetConfig {
   customDailyLimit?: number; // optional manual daily limit
   autoDailyLimit: boolean; // calculate remainingBudget / remainingDays
   cityContext: string; // "Cimahi & sekitarnya"
+  autoMonthlyReset?: boolean; // Otomatis reset setiap tanggal 1 tiap bulan (default true)
+  lastAutoResetAt?: string; // e.g. "2026-10-01" or ISO string
 }
 
 export interface SyncStatus {

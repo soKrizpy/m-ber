@@ -98,34 +98,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
 
-            {/* Pending queue badge */}
-            {syncStatus.pendingCount > 0 && (
-              <button
-                onClick={onOpenSyncModal}
-                className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 hover:bg-blue-200 transition"
-                title={`${syncStatus.pendingCount} transaksi belum tersinkron ke Google Sheets`}
-              >
-                <CloudUpload className="w-3.5 h-3.5" />
-                <span>{syncStatus.pendingCount}</span>
-              </button>
-            )}
-
-            {/* Google Sheets Modal trigger */}
+            {/* Google Sheets Sync trigger (with pending count indicator) */}
             <button
               onClick={onOpenSyncModal}
-              className="hidden sm:inline-flex p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
-              title="Koneksi Google Sheets & Apps Script"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative cursor-pointer"
+              title="Sinkronisasi Google Sheets & Cadangan Data"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            </button>
-
-            {/* Google Calendar modal trigger */}
-            <button
-              onClick={onOpenCalendarModal}
-              className="hidden sm:inline-flex p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
-              title="Pengingat Jadwal Google Calendar"
-            >
-              <Calendar className="w-4 h-4 text-blue-500" />
+              {syncStatus.pendingCount > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-slate-900" />
+              )}
             </button>
 
             {/* Notification Bell */}

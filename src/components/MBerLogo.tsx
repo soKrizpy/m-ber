@@ -13,7 +13,7 @@ export interface MBerLogoProps {
 /**
  * M-Ber Official Brand Logo Component
  * Expertly adjusted for Light and Dark modes:
- * - Light Mode: Deep, rich forest/pine green (#23533E & #2D6A4F) for optimal contrast on clean white backgrounds.
+ * - Light Mode: Deep, rich forest/pine green (#23533E & #1B4332) for optimal contrast on clean white backgrounds.
  * - Dark Mode: Luminous emerald (#10B981 & #34D399) with radiant mint accents and crisp white wordmark (#FFFFFF) for dark backgrounds.
  */
 export const MBerLogo: React.FC<MBerLogoProps> = ({
@@ -46,7 +46,7 @@ export const MBerLogo: React.FC<MBerLogoProps> = ({
         viewBox="0 0 500 500"
         width={dim}
         height={dim}
-        className="shrink-0 transition-transform duration-200"
+        className="shrink-0 transition-transform duration-200 select-none"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
@@ -54,8 +54,8 @@ export const MBerLogo: React.FC<MBerLogoProps> = ({
         <defs>
           {/* Light Mode Gradient */}
           <linearGradient id="mber-grad-light" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#2D6A4F" />
-            <stop offset="100%" stopColor="#1E4D38" />
+            <stop offset="0%" stopColor="#23533E" />
+            <stop offset="100%" stopColor="#1B4332" />
           </linearGradient>
           <linearGradient id="mber-arrow-light" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#2D6A4F" />
@@ -85,77 +85,81 @@ export const MBerLogo: React.FC<MBerLogoProps> = ({
               : 'text-emerald-800 dark:text-emerald-400'
           }
         >
-          {/* Left Stem & Top Arch of 'M' */}
+          {/* Left vertical leg & top arch into roof */}
           <path
-            d="M 105 340 L 105 105 C 105 65 145 52 175 82 L 250 162"
+            d="M 90 410 L 90 152 C 90 92 144 76 180 112 L 250 182"
+            stroke="currentColor"
+            strokeWidth="26"
+          />
+
+          {/* Right diagonal into top arch & right vertical leg */}
+          <path
+            d="M 250 182 L 320 112 C 356 76 410 92 410 152 L 410 410"
+            stroke="currentColor"
+            strokeWidth="26"
+          />
+
+          {/* Gable roof of the house (45° Symmetrical Pitch) */}
+          <path
+            d="M 145 320 L 250 215 L 355 320"
+            stroke="currentColor"
+            strokeWidth="26"
+          />
+
+          {/* House base walls and bottom continuous curved floor */}
+          <path
+            d="M 175 298 L 175 385 C 175 409 194 418 222 418 L 278 418 C 306 418 325 409 325 385 L 325 295"
+            stroke="currentColor"
+            strokeWidth="26"
+          />
+
+          {/* Chimney vertical shaft */}
+          <path
+            d="M 325 285 L 325 218"
             stroke="currentColor"
             strokeWidth="24"
           />
 
-          {/* Right Diagonal & Right Vertical Stem of 'M' */}
+          {/* Upward arrow growth pointer on top of chimney */}
           <path
-            d="M 250 162 L 325 82 C 355 52 395 65 395 105 L 395 340"
-            stroke="currentColor"
-            strokeWidth="24"
-          />
-
-          {/* House Roof Gable */}
-          <path
-            d="M 148 260 L 250 165 L 342 250"
-            stroke="currentColor"
-            strokeWidth="24"
-          />
-
-          {/* House Base Walls and Floor */}
-          <path
-            d="M 175 258 L 175 320 C 175 338 190 348 210 348 L 290 348 C 310 348 325 338 325 320 L 325 248"
-            stroke="currentColor"
-            strokeWidth="24"
-          />
-
-          {/* Chimney Shaft */}
-          <path
-            d="M 325 240 L 325 170"
-            stroke="currentColor"
-            strokeWidth="24"
-          />
-
-          {/* Upward Growth Arrowhead on Chimney */}
-          <path
-            d="M 298 174 L 325 136 L 352 174 Z"
+            d="M 298 220 L 325 174 L 352 220 Z"
             fill="currentColor"
             stroke="currentColor"
-            strokeWidth="6"
+            strokeWidth="5"
           />
 
-          {/* Arched Window (4 Panes) */}
-          {/* Top-left pane (Arched top) */}
+          {/* 4-Pane Arched Center Window */}
+          {/* Top-left pane (arched top-left) */}
           <path
-            d="M 222 252 L 222 238 C 222 228 228 224 238 224 L 241 224 L 241 252 Z"
+            d="M 223 310 L 223 296 C 223 288 230 284 243 284 L 244 284 L 244 310 Z"
             fill="currentColor"
+            stroke="none"
           />
-          {/* Top-right pane (Arched top) */}
+          {/* Top-right pane (arched top-right) */}
           <path
-            d="M 249 252 L 249 224 L 252 224 C 262 224 268 228 268 238 L 268 252 Z"
+            d="M 256 310 L 256 284 L 257 284 C 270 284 277 288 277 296 L 277 310 Z"
             fill="currentColor"
+            stroke="none"
           />
           {/* Bottom-left pane */}
           <rect
-            x="222"
-            y="259"
-            width="19"
-            height="19"
-            rx="3"
+            x="223"
+            y="316"
+            width="21"
+            height="21"
+            rx="3.5"
             fill="currentColor"
+            stroke="none"
           />
           {/* Bottom-right pane */}
           <rect
-            x="249"
-            y="259"
-            width="19"
-            height="19"
-            rx="3"
+            x="256"
+            y="316"
+            width="21"
+            height="21"
+            rx="3.5"
             fill="currentColor"
+            stroke="none"
           />
         </g>
       </svg>
