@@ -51,28 +51,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Region Badge (Icon-only on smaller screens) */}
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 sm:h-16">
+          {/* Logo & Region Badge */}
           <div
-            className="flex items-center space-x-2.5 cursor-pointer select-none group"
+            className="flex items-center space-x-2 sm:space-x-2.5 cursor-pointer select-none group shrink-0"
             onClick={onNavigateHome}
             title="Kembali ke Ringkasan M-Ber"
           >
-            <div className="w-10 h-10 rounded-xl p-1 bg-emerald-50 dark:bg-slate-800/90 border border-emerald-200/60 dark:border-slate-700/80 flex items-center justify-center shadow-sm shadow-emerald-500/10 shrink-0 group-hover:scale-105 transition-all">
-              <MBerLogo variant="icon" size={32} isDark={isDark} />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl p-1 bg-emerald-50 dark:bg-slate-800/90 border border-emerald-200/60 dark:border-slate-700/80 flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-all">
+              <MBerLogo variant="icon" size={26} isDark={isDark} />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <span className="font-extrabold text-sm sm:text-lg tracking-tight text-slate-900 dark:text-white">
                   M-Ber
                 </span>
-                <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
-                  Cimahi & KBB
+                <span className="hidden xs:inline-block text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
+                  Cimahi
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                Monthly Budget Report
+              <p className="text-[9px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-tight">
+                Budget Report
               </p>
             </div>
           </div>

@@ -1,0 +1,32 @@
+{
+  "name": "M-Ber - Dompet Pintar Ibu (Monthly Budget Report)",
+  "short_name": "M-Ber",
+  "description": "Aplikasi manajemen uang belanja bulanan ibu rumah tangga offline-first, rapor belanja hemat, pengingat Google Calendar, dan sinkronisasi Google Sheets.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x48 72x72 96x96 128x128 192x192 256x256 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-light.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-dark.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["finance", "productivity", "utilities"],
+  "lang": "id"
+}

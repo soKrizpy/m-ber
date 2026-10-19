@@ -30,11 +30,8 @@ import { BudgetOverviewCard } from './components/BudgetOverviewCard.tsx';
 import { TransactionFormModal } from './components/TransactionFormModal.tsx';
 import { TransactionList } from './components/TransactionList.tsx';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard.tsx';
-import { GeminiAdvisorView } from './components/GeminiAdvisorView.tsx';
-import { CimahiBudgetChatbot } from './components/CimahiBudgetChatbot.tsx';
-import { DailySmartTipsSection } from './components/DailySmartTipsSection.tsx';
-import { SmartShoppingListSection } from './components/SmartShoppingListSection.tsx';
 import { SavingsGoalsSection } from './components/SavingsGoalsSection.tsx';
+import { AchievementsView } from './components/AchievementsView.tsx';
 import { GoogleSyncModal } from './components/GoogleSyncModal.tsx';
 import { CalendarReminderModal } from './components/CalendarReminderModal.tsx';
 import { NotificationDrawer } from './components/NotificationDrawer.tsx';
@@ -118,9 +115,7 @@ export default function App() {
   const [googleUser, setGoogleUser] = useState<User | null>(null);
 
   // Active view tab & modals
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'analytics' | 'gemini'>('overview');
-  const [geminiMode, setGeminiMode] = useState<'chatbot' | 'tips' | 'shopping' | 'audit'>('chatbot');
-  const [chatbotPrefillPrompt, setChatbotPrefillPrompt] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'analytics' | 'compliance'>('overview');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [formInitialData, setFormInitialData] = useState<{
     type?: 'income' | 'expense';
@@ -606,11 +601,11 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Main Content Area - Mobile Optimized */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24 md:pb-8">
         {/* VIEW 1: Overview (Default - Streamlined & Focused) */}
         {activeTab === 'overview' && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <BudgetOverviewCard
               config={budgetConfig}
               onUpdateConfig={(newCfg) => {
@@ -622,7 +617,7 @@ export default function App() {
               remainingBudget={remainingBudget}
               dailyStatus={dailyStatus}
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenAdvisor={() => setActiveTab('gemini')}
+              onOpenCompliance={() => setActiveTab('compliance')}
               onOpenExportModal={() => setActiveTab('analytics')}
               onOpenRecapModal={() => setIsRecapModalOpen(true)}
             />
@@ -671,113 +666,20 @@ export default function App() {
           />
         )}
 
-        {/* VIEW 4: Kang Tambal AI Suite (Chatbot, Daily Tips, Smart Shopping List & Audit) */}
-        {activeTab === 'gemini' && (
-          <div className="space-y-4">
-            {/* Mode Switcher Navigation Pills */}
-            <div className="flex items-center justify-center">
-              <div className="inline-flex p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 max-w-full overflow-x-auto">
-                <button
-                  onClick={() => setGeminiMode('chatbot')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
-                    geminiMode === 'chatbot'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Chatbot Asisten</span>
-                </button>
-
-                <button
-                  onClick={() => setGeminiMode('tips')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
-                    geminiMode === 'tips'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <span>Tips Harian</span>
-                </button>
-
-                <button
-                  onClick={() => setGeminiMode('shopping')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
-                    geminiMode === 'shopping'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <span>Daftar Belanja 7 Hari</span>
-                </button>
-
-                <button
-                  onClick={() => setGeminiMode('audit')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
-                    geminiMode === 'audit'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <span>Audit Anggaran</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Sub-view Content */}
-            {geminiMode === 'chatbot' && (
-              <CimahiBudgetChatbot
-                config={budgetConfig}
-                transactions={currentMonthTransactions}
-                dailyStatus={dailyStatus}
-                totalIncome={totalIncome}
-                totalExpense={totalExpense}
-                remainingBudget={remainingBudget}
-                categories={categoriesSummary}
-                initialPrompt={chatbotPrefillPrompt}
-                onClearInitialPrompt={() => setChatbotPrefillPrompt(null)}
-              />
-            )}
-
-            {geminiMode === 'tips' && (
-              <DailySmartTipsSection
-                config={budgetConfig}
-                dailyStatus={dailyStatus}
-                transactions={currentMonthTransactions}
-                remainingBudget={remainingBudget}
-                onAskChatbotWithTip={(tipText) => {
-                  setChatbotPrefillPrompt(tipText);
-                  setGeminiMode('chatbot');
-                }}
-              />
-            )}
-
-            {geminiMode === 'shopping' && (
-              <SmartShoppingListSection
-                config={budgetConfig}
-                dailyStatus={dailyStatus}
-                transactions={currentMonthTransactions}
-                remainingBudget={remainingBudget}
-                onOpenAddTransaction={(prefill) => {
-                  setFormInitialData(prefill);
-                  setIsAddModalOpen(true);
-                }}
-                onToast={(msg, type) => showToast(msg, type)}
-              />
-            )}
-
-            {geminiMode === 'audit' && (
-              <GeminiAdvisorView
-                config={budgetConfig}
-                transactions={currentMonthTransactions}
-                dailyStatus={dailyStatus}
-                totalIncome={totalIncome}
-                totalExpense={totalExpense}
-                remainingBudget={remainingBudget}
-                categories={categoriesSummary}
-              />
-            )}
-          </div>
+        {/* VIEW 4: Rapor Belanja Bunda & Medali Hemat (Didukung Rewarded Ads) */}
+        {activeTab === 'compliance' && (
+          <AchievementsView
+            config={budgetConfig}
+            transactions={currentMonthTransactions}
+            dailyStatus={dailyStatus}
+            totalIncome={totalIncome}
+            totalExpense={totalExpense}
+            remainingBudget={remainingBudget}
+            categories={categoriesSummary}
+            onOpenRecapModal={() => setIsRecapModalOpen(true)}
+            onNavigateTab={setActiveTab}
+            onToast={showToast}
+          />
         )}
       </main>
 
@@ -866,7 +768,7 @@ export default function App() {
         remainingBudget={remainingBudget}
         categories={categoriesSummary}
         onOpenAdvisor={() => {
-          setActiveTab('gemini');
+          setActiveTab('compliance');
         }}
         onUpdateConfig={(newCfg) => {
           FinanceDB.saveBudgetConfig(newCfg);

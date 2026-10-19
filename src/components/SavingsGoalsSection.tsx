@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Target,
   Plus,
@@ -16,8 +16,11 @@ import {
   Compass,
   ChevronDown,
   ChevronUp,
+  Gift,
 } from 'lucide-react';
 import { SavingsGoal } from '../types/finance.ts';
+import { RewardedAdsService } from '../services/rewardedAds.ts';
+import { RewardedAdModal } from './RewardedAdModal.tsx';
 
 interface SavingsGoalsSectionProps {
   savingsGoals: SavingsGoal[];
@@ -29,14 +32,14 @@ interface SavingsGoalsSectionProps {
 }
 
 const CATEGORY_OPTIONS = [
-  { label: 'Dana Darurat', icon: '🛡️', color: 'from-amber-500 to-orange-500' },
-  { label: 'Liburan & Healing', icon: '🏖️', color: 'from-teal-500 to-emerald-500' },
-  { label: 'Gadget & Elektronik', icon: '💻', color: 'from-blue-500 to-indigo-500' },
+  { label: 'Tabungan Pendidikan Anak', icon: '🎒', color: 'from-blue-500 to-cyan-500' },
+  { label: 'Tabungan Emas & Arisan', icon: '💍', color: 'from-amber-500 to-yellow-500' },
+  { label: 'Tabungan Kurban & Hari Raya', icon: '🐑', color: 'from-emerald-500 to-teal-500' },
+  { label: 'Dana Darurat Keluarga', icon: '🛡️', color: 'from-rose-500 to-pink-500' },
+  { label: 'Liburan Keluarga Bunda', icon: '🏖️', color: 'from-teal-500 to-emerald-500' },
+  { label: 'Renovasi Rumah & Dapur Idaman', icon: '🏡', color: 'from-amber-600 to-orange-600' },
   { label: 'Kendaraan & Servis', icon: '🛵', color: 'from-purple-500 to-violet-500' },
-  { label: 'Pendidikan & Kursus', icon: '🎓', color: 'from-cyan-500 to-blue-500' },
-  { label: 'Investasi & Masa Depan', icon: '📈', color: 'from-emerald-500 to-teal-500' },
-  { label: 'Renovasi Rumah', icon: '🏡', color: 'from-amber-600 to-yellow-600' },
-  { label: 'Lainnya', icon: '✨', color: 'from-slate-500 to-gray-600' },
+  { label: 'Tabungan Impian Lainnya', icon: '✨', color: 'from-slate-500 to-gray-600' },
 ];
 
 export const SavingsGoalsSection: React.FC<SavingsGoalsSectionProps> = ({
@@ -51,6 +54,22 @@ export const SavingsGoalsSection: React.FC<SavingsGoalsSectionProps> = ({
   const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null);
   const [isExpanded, setIsExpanded] = useState<boolean>(savingsGoals.length > 0);
 
+  // Rewarded ads multi-goal slots state
+  const [savingsSlots, setSavingsSlots] = useState(() =>
+    RewardedAdsService.getSavingsSlotsCount()
+  );
+  const [isAdModalOpen, setIsAdModalOpen] = useState(false);
+  const [pendingOpenAfterAd, setPendingOpenAfterAd] = useState(false);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setSavingsSlots(RewardedAdsService.getSavingsSlotsCount());
+    };
+    handleUpdate();
+    window.addEventListener('mber_rewards_updated', handleUpdate);
+    return () => window.removeEventListener('mber_rewards_updated', handleUpdate);
+  }, []);
+
   // Form State
   const [formTitle, setFormTitle] = useState('');
   const [formTargetAmount, setFormTargetAmount] = useState('');
@@ -63,6 +82,25 @@ export const SavingsGoalsSection: React.FC<SavingsGoalsSectionProps> = ({
 
   const formatRupiah = (val: number) => {
     return 'Rp ' + Math.round(val).toLocaleString('id-ID');
+  };
+
+  const handleTriggerAddGoal = () => {
+    if (savingsGoals.length >= savingsSlots) {
+      setPendingOpenAfterAd(true);
+      setIsAdModalOpen(true);
+      return;
+    }
+    openAddModal();
+  };
+
+  const handleRewardGranted = () => {
+    setSavingsSlots(RewardedAdsService.getSavingsSlotsCount());
+    if (pendingOpenAfterAd) {
+      setPendingOpenAfterAd(false);
+      setTimeout(() => {
+        openAddModal();
+      }, 300);
+    }
   };
 
   const openAddModal = () => {
@@ -174,26 +212,34 @@ export const SavingsGoalsSection: React.FC<SavingsGoalsSectionProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                  Target Tabungan (Savings Goals)
+                  Tabungan Impian Keluarga Bunda
                 </h3>
                 <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                  Surplus-Powered
+                  Otomatis dari Sisa Belanja
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Pencapaian target otomatis terdorong oleh sisa surplus anggaran bulanan Cimahi & KBB.
+                Pencapaian tabungan otomatis terisi dari sisa uang belanja bulanan yang Bunda hemat.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 self-start md:self-auto">
+        <div className="flex items-center space-x-2.5 self-start md:self-auto flex-wrap gap-y-2">
+          {/* Slot Pill */}
+          <div className="px-3 py-1.5 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900/60 flex items-center space-x-1.5 text-xs">
+            <Target className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300">
+              Slot: {savingsGoals.length}/{savingsSlots}
+            </span>
+          </div>
+
           {/* Unused Surplus Pill */}
           <div className="px-3.5 py-1.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 flex items-center space-x-2 text-xs">
             <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block leading-tight">
-                Surplus Belum Terpakai
+                Sisa Uang Belanja
               </span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">
                 {formatRupiah(unusedBudgetSurplus)}
@@ -202,11 +248,24 @@ export const SavingsGoalsSection: React.FC<SavingsGoalsSectionProps> = ({
           </div>
 
           <button
-            onClick={openAddModal}
-            className="px-3.5 py-2 rounded-2xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-xs flex items-center space-x-1.5 cursor-pointer"
+            onClick={handleTriggerAddGoal}
+            className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5 cursor-pointer ${
+              savingsGoals.length >= savingsSlots
+                ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-amber-500/20'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+            }`}
           >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Target</span>
+            {savingsGoals.length >= savingsSlots ? (
+              <>
+                <Gift className="w-4 h-4 text-slate-950" />
+                <span>+ Buka Slot Baru (Video 5s)</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                <span>Tambah Tabungan</span>
+              </>
+            )}
           </button>
 
           <button
@@ -652,6 +711,14 @@ export const SavingsGoalsSection: React.FC<SavingsGoalsSectionProps> = ({
           </div>
         </div>
       )}
+
+      {/* Rewarded Ad Modal for Savings Slots */}
+      <RewardedAdModal
+        isOpen={isAdModalOpen}
+        onClose={() => setIsAdModalOpen(false)}
+        rewardType="savings_slot"
+        onRewardGranted={handleRewardGranted}
+      />
     </section>
   );
 };

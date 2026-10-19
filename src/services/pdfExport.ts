@@ -110,7 +110,7 @@ const EFFICIENCY_TIPS: EfficiencyTipCategory[] = [
     accentColor: [190, 18, 60],
     tips: [
       {
-        headline: 'Menjaga Tiga Pilar Fondasi Kesejahteraan:',
+        headline: 'Menjaga Fondasi Kesejahteraan Keluarga:',
         description:
           'Mengutamakan pemenuhan kebutuhan esensial keluarga: hidangan bergizi seimbang, kenyamanan rumah tinggal & utilitas, serta perlindungan kesehatan untuk ketenangan hari esok.',
       },

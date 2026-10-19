@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Plus,
+  Gift,
 } from 'lucide-react';
 import { Transaction, TransactionType } from '../types/finance.ts';
 import { ConfirmationModal } from './ConfirmationModal.tsx';
@@ -238,6 +239,26 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             ))}
           </div>
         )}
+      </div>
+
+      {/* Gentle Non-Intrusive Sponsor Banner for Mothers (AdMob Style) */}
+      <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-50/70 via-amber-50/50 to-teal-50/70 dark:from-slate-800/80 dark:via-slate-800/50 dark:to-slate-800/80 border border-slate-200/80 dark:border-slate-800 text-xs flex items-center justify-between">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <Gift className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">
+              Sponsor Ibu Bijak • Google AdMob
+            </span>
+            <p className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] sm:text-xs">
+              Belanja Cerdas & Berhemat Bersama Komunitas Ibu Indonesia
+            </p>
+          </div>
+        </div>
+        <span className="text-[10px] text-slate-400 px-2 py-0.5 rounded-md bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+          Iklan
+        </span>
       </div>
 
       {/* Confirmation Modal for deletion */}

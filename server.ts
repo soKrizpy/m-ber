@@ -22,6 +22,16 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(express.json());
 
+// Health check endpoint
+app.get('/api/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    appName: 'M-Ber (Dompet Pintar Cimahi)',
+    timestamp: new Date().toISOString(),
+    hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
+  });
+});
+
 // API endpoint for Gemini Smart Shopping List
 app.post('/api/gemini/smart-shopping-list', async (req, res) => {
   try {

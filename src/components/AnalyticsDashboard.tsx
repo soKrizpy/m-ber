@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   PieChart as PieIcon,
   TrendingDown,
@@ -12,6 +12,7 @@ import {
   Sparkles,
   Info,
   Award,
+  Gift,
 } from 'lucide-react';
 import {
   Transaction,
@@ -20,6 +21,8 @@ import {
   CategorySummary,
 } from '../types/finance.ts';
 import { ExportService } from '../services/pdfExport.ts';
+import { RewardedAdsService } from '../services/rewardedAds.ts';
+import { RewardedAdModal } from './RewardedAdModal.tsx';
 
 interface AnalyticsDashboardProps {
   config: BudgetConfig;
@@ -47,6 +50,22 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     amount: number;
     isProjected: boolean;
   } | null>(null);
+
+  // Rewarded ads PDF HD export state
+  const [pdfHdPasses, setPdfHdPasses] = useState(() =>
+    RewardedAdsService.getPdfHdPassCount()
+  );
+  const [isAdModalOpen, setIsAdModalOpen] = useState(false);
+  const [pendingExportAfterAd, setPendingExportAfterAd] = useState(false);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setPdfHdPasses(RewardedAdsService.getPdfHdPassCount());
+    };
+    handleUpdate();
+    window.addEventListener('mber_rewards_updated', handleUpdate);
+    return () => window.removeEventListener('mber_rewards_updated', handleUpdate);
+  }, []);
 
   // 1. Calculate Daily Cumulative Spending & Linear Regression Projection for 30 days
   const regressionData = useMemo(() => {
