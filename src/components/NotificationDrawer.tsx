@@ -44,8 +44,8 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
     Notification.permission === 'granted';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/50 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 w-full max-w-md h-full shadow-2xl flex flex-col p-6 space-y-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-end bg-black/50 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 w-full max-w-md h-full shadow-2xl flex flex-col p-4 sm:p-6 space-y-4 pb-[max(1.2rem,env(safe-area-inset-bottom))]">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center space-x-2.5">

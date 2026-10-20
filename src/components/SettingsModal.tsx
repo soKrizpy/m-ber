@@ -18,7 +18,6 @@ import {
   Moon,
   Monitor,
   RotateCcw,
-  Download,
   Calendar,
 } from 'lucide-react';
 import {
@@ -28,7 +27,7 @@ import {
 } from '../types/finance.ts';
 import { NotificationService } from '../services/notifications.ts';
 import { FinanceDB } from '../services/db.ts';
-import { MBerLogo } from './MBerLogo.tsx';
+import { INDONESIA_REGIONS } from './LocalMarketPromoSection.tsx';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -140,8 +139,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-6 p-6">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl max-w-xl w-full max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto shadow-2xl space-y-6 p-4 sm:p-6 pb-0 sm:pb-6 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center space-x-2.5">
@@ -504,7 +503,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* SECTION 3: Local Area Coverage Setting */}
+        {/* SECTION 3: Local Area Coverage Setting (Seluruh Indonesia) */}
         <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3 text-xs">
           <div className="flex items-center space-x-2">
             <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -514,56 +513,59 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Kang Tambal dan Tips Harian akan mencari promo supermarket terdekat dan substitusi pangan murah sesuai wilayah pilihan Anda:
+            Pilih wilayah tempat tinggal Bunda di seluruh Indonesia agar info promo supermarket (Indomaret, Alfamart, Super Indo, Borma, Hypermart, dsb.) dan pasar tradisional lokal disesuaikan dengan harga bahan pokok terdekat:
           </p>
 
-          <div className="space-y-2">
-            {[
-              {
-                id: 'full_kbb_cimahi',
-                label: 'Kabupaten Bandung Barat & Cimahi (Lengkap)',
-                desc: 'Jl. Haji Ghofur, PakuHaji, Desa Cilame, Kec. Ngamprah, Cipageran, Pasar Atas, Super Indo, & Borma',
-                value: 'Cimahi & KBB (Haji Ghofur, PakuHaji, Desa Cilame, Kec. Ngamprah, Cipageran)',
-              },
-              {
-                id: 'kbb_focus',
-                label: 'Fokus KBB (Haji Ghofur, PakuHaji, Cilame, Ngamprah)',
-                desc: 'Prioritaskan diskon minimarket/supermarket & petani lokal jalur H. Ghofur, PakuHaji, Cilame, & Kompleks Pemkab KBB Ngamprah',
-                value: 'KBB Area Haji Ghofur, PakuHaji, Desa Cilame, Kecamatan Ngamprah',
-              },
-              {
-                id: 'cipageran_cimahi',
-                label: 'Cipageran & Cimahi Utara - Tengah',
-                desc: 'Pasar Atas Baru, Super Indo Sangkuriang, Borma Gandawijaya, & toko sembako Cipageran',
-                value: 'Cipageran & Cimahi (Pasar Atas, Borma, Super Indo)',
-              },
-            ].map((area) => (
-              <label
-                key={area.id}
-                onClick={() => setSelectedArea(area.value)}
-                className={`p-3 rounded-2xl border cursor-pointer block transition ${
-                  selectedArea === area.value
-                    ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40'
-                    : 'border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900 dark:text-white">
-                    {area.label}
-                  </span>
-                  <input
-                    type="radio"
-                    name="areaSelection"
-                    checked={selectedArea === area.value}
-                    onChange={() => setSelectedArea(area.value)}
-                    className="accent-emerald-600"
-                  />
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-                  {area.desc}
-                </p>
-              </label>
-            ))}
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+            {INDONESIA_REGIONS.map((reg) => {
+              const regionValue = `${reg.name} (${reg.cities})`;
+              const isSelected = selectedArea.toLowerCase().includes(reg.name.toLowerCase()) || selectedArea === regionValue;
+
+              return (
+                <label
+                  key={reg.id}
+                  onClick={() => setSelectedArea(regionValue)}
+                  className={`p-3 rounded-2xl border cursor-pointer block transition ${
+                    isSelected
+                      ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40'
+                      : 'border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 dark:text-white">
+                      {reg.name}
+                    </span>
+                    <input
+                      type="radio"
+                      name="areaSelection"
+                      checked={isSelected}
+                      onChange={() => setSelectedArea(regionValue)}
+                      className="accent-emerald-600"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                    Kota/Kab: {reg.cities}
+                  </p>
+                  <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">
+                    Supermarket & Pasar: {reg.stores}
+                  </p>
+                </label>
+              );
+            })}
+          </div>
+
+          {/* Custom City Input */}
+          <div className="pt-2">
+            <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Atau tentukan wilayah/kota khusus Bunda:
+            </label>
+            <input
+              type="text"
+              value={selectedArea}
+              onChange={(e) => setSelectedArea(e.target.value)}
+              placeholder="Contoh: Cimahi Utara, Sleman Jogja, Sidoarjo, dsb."
+              className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+            />
           </div>
         </div>
 
@@ -643,75 +645,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               );
             })}
           </div>
-
-          {/* Logo Showcase Section for Light & Dark Mode */}
-          <div className="mt-4 p-4 rounded-2xl bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Penyesuaian Logo Resmi M-Ber (Light & Dark Mode)
-                </h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Logo telah dioptimalkan dengan kontras presisi dan palet warna adaptif:
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              {/* Light Mode Preview Card */}
-              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-col items-center justify-between text-center space-y-3">
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
-                    Mode Terang (Light)
-                  </span>
-                  <a
-                    href="/logo-light.svg"
-                    download="M-Ber_Logo_Light.svg"
-                    className="text-[10px] font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 hover:underline"
-                    title="Unduh SVG Mode Terang"
-                  >
-                    <Download className="w-3 h-3" /> Unduh SVG
-                  </a>
-                </div>
-
-                <div className="py-2">
-                  <MBerLogo variant="full" size="xl" isDark={false} showSubtitle={true} subtitle="Harmoni Keuangan Keluarga" />
-                </div>
-
-                <div className="w-full pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
-                  <span className="font-mono">Hex: #23533E & #2D6A4F</span>
-                  <span className="text-emerald-800 font-semibold">Forest Emerald</span>
-                </div>
-              </div>
-
-              {/* Dark Mode Preview Card */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 shadow-md flex flex-col items-center justify-between text-center space-y-3">
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-800/80">
-                    Mode Gelap (Dark)
-                  </span>
-                  <a
-                    href="/logo-dark.svg"
-                    download="M-Ber_Logo_Dark.svg"
-                    className="text-[10px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 hover:underline"
-                    title="Unduh SVG Mode Gelap"
-                  >
-                    <Download className="w-3 h-3" /> Unduh SVG
-                  </a>
-                </div>
-
-                <div className="py-2">
-                  <MBerLogo variant="full" size="xl" isDark={true} showSubtitle={true} subtitle="Harmoni Keuangan Keluarga" />
-                </div>
-
-                <div className="w-full pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
-                  <span className="font-mono">Hex: #34D399 & #FFFFFF</span>
-                  <span className="text-emerald-400 font-semibold">Luminous Mint</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Reset Data Section */}
@@ -735,26 +668,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClose();
                 }
               }}
-              className="px-3.5 py-1.5 text-xs font-bold bg-white dark:bg-rose-900/60 text-rose-600 dark:text-rose-200 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-300 dark:border-rose-700 rounded-xl transition shadow-2xs shrink-0"
+              className="px-3.5 py-1.5 text-xs font-bold bg-white dark:bg-rose-900/60 text-rose-600 dark:text-rose-200 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-300 dark:border-rose-700 rounded-xl transition shadow-2xs shrink-0 cursor-pointer"
             >
               Reset ke 0
             </button>
           </div>
         </div>
 
-        {/* Footer actions */}
-        <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+        {/* Footer actions - Sticky Bottom on smartphone */}
+        <div className="sticky bottom-0 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 mt-6 p-4 sm:p-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md flex justify-end space-x-2 border-t border-slate-100 dark:border-slate-800 z-20 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+            className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
           >
             Tutup
           </button>
           <button
             type="button"
             onClick={handleSaveGeneralSettings}
-            className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition"
+            className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition active:scale-95 cursor-pointer"
           >
             Simpan Perubahan
           </button>

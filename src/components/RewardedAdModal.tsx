@@ -151,7 +151,7 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
   const reward = getRewardInfo();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-sm sm:max-w-md bg-slate-900 border border-slate-700/80 rounded-3xl overflow-hidden shadow-2xl text-white flex flex-col">
         {/* Top Header Bar */}
         <div className="flex items-center justify-between px-4 py-3 bg-slate-950/80 border-b border-slate-800">

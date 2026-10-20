@@ -32,7 +32,7 @@ interface AchievementsViewProps {
   remainingBudget: number;
   categories: CategorySummary[];
   onOpenRecapModal: () => void;
-  onNavigateTab: (tab: 'overview' | 'transactions' | 'analytics' | 'compliance') => void;
+  onNavigateTab: (tab: 'overview' | 'transactions' | 'promo' | 'analytics' | 'compliance') => void;
   onToast?: (msg: string, type?: 'success' | 'warning' | 'info') => void;
 }
 

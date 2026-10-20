@@ -158,8 +158,8 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
   const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl space-y-4 sm:space-y-5 p-4 sm:p-6">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto shadow-2xl space-y-4 sm:space-y-5 p-4 sm:p-6 pb-0 sm:pb-6">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center space-x-2">
@@ -378,19 +378,19 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+          {/* Action buttons - Sticky Bottom */}
+          <div className="sticky bottom-0 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 mt-4 p-4 sm:p-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md flex justify-end space-x-2 border-t border-slate-100 dark:border-slate-800 z-10 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
+              className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={numAmount <= 0}
-              className={`px-5 py-2 text-xs font-bold text-white rounded-xl shadow-md transition active:scale-95 disabled:opacity-50 ${
+              className={`px-5 py-2 text-xs font-bold text-white rounded-xl shadow-md transition active:scale-95 disabled:opacity-50 cursor-pointer ${
                 type === 'expense'
                   ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/20'
                   : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'

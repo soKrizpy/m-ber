@@ -168,8 +168,8 @@ _M-Ber Family Financial Planner: Menjaga Ketenteraman Rumah Tangga_`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-2xl w-full max-h-[92dvh] sm:max-h-[92vh] flex flex-col overflow-hidden">
         
         {/* MODAL HEADER */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white relative shrink-0">
@@ -442,8 +442,8 @@ _M-Ber Family Financial Planner: Menjaga Ketenteraman Rumah Tangga_`;
 
         </div>
 
-        {/* MODAL FOOTER */}
-        <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
+        {/* MODAL FOOTER - Sticky Bottom on smartphone */}
+        <div className="sticky bottom-0 p-3.5 sm:p-4 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0 pb-[max(0.85rem,env(safe-area-inset-bottom))] z-10">
           <button
             type="button"
             onClick={handleCopyText}

@@ -11,6 +11,7 @@ import {
   PlusCircle,
   FileDown,
   Award,
+  Tag,
 } from 'lucide-react';
 import { BudgetConfig, DailyLimitStatus } from '../types/finance.ts';
 
@@ -23,6 +24,7 @@ interface BudgetOverviewCardProps {
   dailyStatus: DailyLimitStatus;
   onOpenAddModal: () => void;
   onOpenCompliance?: () => void;
+  onOpenPromo?: () => void;
   onOpenExportModal: () => void;
   onOpenRecapModal?: () => void;
 }
@@ -36,6 +38,7 @@ export const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({
   dailyStatus,
   onOpenAddModal,
   onOpenCompliance,
+  onOpenPromo,
   onOpenExportModal,
   onOpenRecapModal,
 }) => {
@@ -187,6 +190,17 @@ export const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({
               >
                 <Award className="w-4 h-4 text-amber-300" />
                 <span>Rapor Bunda</span>
+              </button>
+            )}
+
+            {onOpenPromo && (
+              <button
+                onClick={onOpenPromo}
+                className="inline-flex items-center justify-center space-x-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30 transition active:scale-95 cursor-pointer"
+                title="Buka Tab Promo Supermarket & Pasar Lokal (100% Gratis)"
+              >
+                <Tag className="w-4 h-4 text-amber-300" />
+                <span>Promo & Pasar</span>
               </button>
             )}
 

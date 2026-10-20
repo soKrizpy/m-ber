@@ -32,6 +32,7 @@ import { TransactionList } from './components/TransactionList.tsx';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard.tsx';
 import { SavingsGoalsSection } from './components/SavingsGoalsSection.tsx';
 import { AchievementsView } from './components/AchievementsView.tsx';
+import { LocalMarketPromoSection } from './components/LocalMarketPromoSection.tsx';
 import { GoogleSyncModal } from './components/GoogleSyncModal.tsx';
 import { CalendarReminderModal } from './components/CalendarReminderModal.tsx';
 import { NotificationDrawer } from './components/NotificationDrawer.tsx';
@@ -115,7 +116,7 @@ export default function App() {
   const [googleUser, setGoogleUser] = useState<User | null>(null);
 
   // Active view tab & modals
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'analytics' | 'compliance'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'promo' | 'analytics' | 'compliance'>('overview');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [formInitialData, setFormInitialData] = useState<{
     type?: 'income' | 'expense';
@@ -539,7 +540,7 @@ export default function App() {
   const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors selection:bg-emerald-500 selection:text-white pb-24 md:pb-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors selection:bg-emerald-500 selection:text-white">
       {/* Top Navbar */}
       <Navbar
         isDark={isDark}
@@ -568,15 +569,14 @@ export default function App() {
         </div>
       )}
 
-      {/* Navigation Bar:
-          - Fixed at bottom on mobile screen (visible from the very beginning)
-          - Positioned up below header on larger screens (laptop/PC, outside header)
-      */}
-      <BottomNavbar
-        activeTab={activeTab}
-        onChangeTab={setActiveTab}
-        transactionCount={transactions.length}
-      />
+      {/* Desktop Navigation Tabs: Positioned sticky below header on laptops/PCs */}
+      <div className="hidden md:block sticky top-16 z-30">
+        <BottomNavbar
+          activeTab={activeTab}
+          onChangeTab={setActiveTab}
+          transactionCount={transactions.length}
+        />
+      </div>
 
       {/* Toast Notification Alert */}
       {toastMessage && (
@@ -618,6 +618,7 @@ export default function App() {
               dailyStatus={dailyStatus}
               onOpenAddModal={() => setIsAddModalOpen(true)}
               onOpenCompliance={() => setActiveTab('compliance')}
+              onOpenPromo={() => setActiveTab('promo')}
               onOpenExportModal={() => setActiveTab('analytics')}
               onOpenRecapModal={() => setIsRecapModalOpen(true)}
             />
@@ -652,6 +653,27 @@ export default function App() {
           />
         )}
 
+        {/* VIEW 3: Promo & Pasar Lokal (Dedicated Tab - 100% Gratis Seluruh Indonesia) */}
+        {activeTab === 'promo' && (
+          <LocalMarketPromoSection
+            cityContext={budgetConfig.cityContext}
+            onUpdateCityContext={(newCity) => {
+              const newCfg = { ...budgetConfig, cityContext: newCity };
+              FinanceDB.saveBudgetConfig(newCfg);
+              setBudgetConfig(newCfg);
+              showToast(`Wilayah belanja diubah ke: ${newCity}`, 'success');
+            }}
+            onOpenAddTransaction={(prefillDesc, prefillCat) => {
+              setFormInitialData({
+                description: prefillDesc,
+                category: prefillCat || 'Makanan & Minuman',
+              });
+              setIsAddModalOpen(true);
+            }}
+            onToast={showToast}
+          />
+        )}
+
         {/* VIEW 3: Analytics & PDF */}
         {activeTab === 'analytics' && (
           <AnalyticsDashboard
@@ -682,6 +704,15 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Mobile Sticky Bottom Navbar: Guaranteed sticky bottom on smartphones, never disappears when scrolling */}
+      <div className="md:hidden sticky bottom-0 left-0 right-0 z-50 mt-auto transform-gpu translate-z-0">
+        <BottomNavbar
+          activeTab={activeTab}
+          onChangeTab={setActiveTab}
+          transactionCount={transactions.length}
+        />
+      </div>
 
       {/* Modals and Drawers */}
       <TransactionFormModal

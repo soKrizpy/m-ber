@@ -132,8 +132,8 @@ export const CalendarReminderModal: React.FC<CalendarReminderModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl space-y-4 p-5 sm:p-6">
+      <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto shadow-2xl space-y-4 p-5 sm:p-6 pb-0 sm:pb-6">
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center space-x-2.5">
@@ -287,12 +287,12 @@ export const CalendarReminderModal: React.FC<CalendarReminderModalProps> = ({
                 </div>
               </div>
 
-              {/* Submit button */}
-              <div className="pt-2 flex justify-end space-x-2">
+              {/* Submit button - Sticky Bottom */}
+              <div className="sticky bottom-0 -mx-5 sm:-mx-6 -mb-5 sm:-mb-6 mt-4 p-4 sm:p-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md flex justify-end space-x-2 border-t border-slate-100 dark:border-slate-800 z-10 pb-[max(1rem,env(safe-area-inset-bottom))]">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-3.5 py-2 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+                  className="px-3.5 py-2 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
                 >
                   Tutup
                 </button>

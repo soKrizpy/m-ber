@@ -6,10 +6,11 @@ import {
   ShieldCheck,
   Award,
   Gift,
+  Tag,
 } from 'lucide-react';
 import { RewardedAdsService } from '../services/rewardedAds.ts';
 
-export type MainTabType = 'overview' | 'transactions' | 'analytics' | 'compliance';
+export type MainTabType = 'overview' | 'transactions' | 'promo' | 'analytics' | 'compliance';
 
 interface BottomNavbarProps {
   activeTab: MainTabType;
@@ -51,6 +52,14 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       isSpecial: false,
     },
     {
+      id: 'promo' as const,
+      label: 'Promo & Pasar',
+      shortLabel: 'Promo',
+      icon: Tag,
+      badge: null,
+      isSpecial: false,
+    },
+    {
       id: 'analytics' as const,
       label: 'Analitik & PDF',
       shortLabel: 'Laporan',
@@ -71,7 +80,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
   return (
     <nav
       aria-label="Navigasi Utama M-Ber"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800/90 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.4)] transition-all pb-[max(0.35rem,env(safe-area-inset-bottom))] md:static md:bottom-auto md:z-30 md:bg-white/90 md:dark:bg-slate-900/90 md:backdrop-blur-md md:border-t-0 md:border-b md:border-slate-200/80 md:dark:border-slate-800/80 md:shadow-xs md:sticky md:top-16 md:pb-0"
+      className="w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800/90 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.5)] transition-all pb-[max(0.6rem,env(safe-area-inset-bottom))] md:bg-white/90 md:dark:bg-slate-900/90 md:backdrop-blur-md md:border-t-0 md:border-b md:border-slate-200/80 md:dark:border-slate-800/80 md:shadow-xs md:pb-0"
     >
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <div className="flex items-center justify-around md:justify-center md:gap-3 lg:gap-4 py-1 sm:py-1.5 md:py-2">
@@ -85,7 +94,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
                 onClick={() => onChangeTab(item.id)}
                 role="tab"
                 aria-selected={isActive}
-                className={`relative group flex flex-col md:flex-row items-center justify-center transition-all duration-200 rounded-2xl md:rounded-xl focus:outline-hidden px-2 sm:px-3 py-1 sm:py-1.5 min-w-[62px] sm:min-w-[76px] md:min-w-0 md:px-4 md:py-2 md:gap-2 cursor-pointer ${
+                className={`relative group flex flex-col md:flex-row items-center justify-center transition-all duration-200 rounded-2xl md:rounded-xl focus:outline-hidden px-1.5 sm:px-2.5 py-1 sm:py-1.5 min-w-[54px] sm:min-w-[68px] md:min-w-0 md:px-3 lg:px-4 md:py-2 md:gap-2 cursor-pointer ${
                   isActive
                     ? item.isSpecial
                       ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 dark:border-emerald-500/30 shadow-xs font-bold'
